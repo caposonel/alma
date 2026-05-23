@@ -43,11 +43,21 @@ interface LyricScrollProps {
 /*  Active-line index calculation                                       */
 /* -------------------------------------------------------------------- */
 
+/* How much earlier (in seconds) we switch the highlight relative to when a
+ * line is supposed to start being sung. Apple Music / Spotify both
+ * highlight a line slightly BEFORE the singer hits it — the human brain
+ * processes the visual cue with a few-frame lag and the line being sung
+ * always feels "the one I just read", which is what we want.
+ *
+ * 0.22s is the sweet spot from manual testing: enough to feel anticipatory
+ * without skipping past lines that are quickly followed by the next. */
+const LYRIC_LEAD_SECONDS = 0.22;
+
 function findActiveLineIndex(
   syncedLines: SyncedLine[],
   timeMs: number
 ): number {
-  const timeSec = timeMs / 1000;
+  const timeSec = timeMs / 1000 + LYRIC_LEAD_SECONDS;
   let active = -1;
   for (let i = 0; i < syncedLines.length; i++) {
     if (syncedLines[i].time <= timeSec) {
@@ -93,10 +103,17 @@ function findActiveLineIndex(
 const APPLE_EASE = [0.32, 0.72, 0, 1] as const;
 
 /** Tween for the container's translateY. Tween (not spring) because
- *  spring impulses stack unpredictably from the throttled ~6Hz playback
- *  ticks; tweens give the same buttery 0.65s glide regardless. */
+ *  spring impulses stack unpredictably from the throttled playback
+ *  ticks; tweens give the same buttery glide regardless.
+ *
+ *  Duration dropped from 0.65s → 0.4s. The longer value felt luxurious
+ *  on slow ballads but made fast-paced songs (where lines change every
+ *  ~1-1.5s) constantly mid-transition when the next line arrived,
+ *  reading as visible lag. 0.4s is short enough that even back-to-back
+ *  line transitions finish before the next one starts, while keeping
+ *  the Apple-easing curve's smoothness. */
 const SCROLL_TRANSITION = {
-  duration: 0.65,
+  duration: 0.4,
   ease: APPLE_EASE,
 } as const;
 
@@ -104,7 +121,7 @@ const SCROLL_TRANSITION = {
  *  so the active-line emphasis arrives at the same moment the stack
  *  finishes gliding. */
 const HIGHLIGHT_TRANSITION = {
-  duration: 0.65,
+  duration: 0.4,
   ease: APPLE_EASE,
 } as const;
 
@@ -290,7 +307,7 @@ export function LyricScroll({
                    * subtle glow Apple uses to make the active line feel
                    * "lit". */
                   transition:
-                    "color 650ms cubic-bezier(0.32, 0.72, 0, 1), text-shadow 650ms cubic-bezier(0.32, 0.72, 0, 1), letter-spacing 650ms cubic-bezier(0.32, 0.72, 0, 1)",
+                    "color 400ms cubic-bezier(0.32, 0.72, 0, 1), text-shadow 400ms cubic-bezier(0.32, 0.72, 0, 1), letter-spacing 400ms cubic-bezier(0.32, 0.72, 0, 1)",
                   textShadow: isActive
                     ? "0 0 14px rgba(217, 119, 119, 0.30), 0 0 2px rgba(217, 119, 119, 0.45)"
                     : "none",

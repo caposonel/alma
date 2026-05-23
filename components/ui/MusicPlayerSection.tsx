@@ -275,15 +275,23 @@ export function MusicPlayerSection({
     };
   }, [currentTrackId, matched, artistName]);
 
-  /* Throttle position updates to ~6x/sec — the IFrame API fires many times
-   * faster than that, and we don't need sub-150ms precision for highlighting.
+  /* Throttle position updates to ~16x/sec (60ms). The IFrame API itself
+   * emits at roughly 100-150ms intervals, so 60ms is faster than the
+   * upstream — effectively NO drops — while still giving React headroom
+   * to batch when the API occasionally double-fires.
+   *
+   * Previous value was 150ms, which dropped about half of all upstream
+   * ticks AND added up to 150ms of perceived karaoke-highlight lag on
+   * songs with synced LRCLIB lyrics. Cutting it to 60ms makes the
+   * highlight feel ~90ms snappier.
+   *
    * Also fans out to the global player context (via `playerRef`, declared
    * up top) so the MailingBar's mini-player progress bar advances in
    * lockstep with the embed. */
   const lastPositionWriteRef = useRef(0);
   function handlePlaybackUpdate(state: PlaybackState) {
     const now = performance.now();
-    if (now - lastPositionWriteRef.current < 150) return;
+    if (now - lastPositionWriteRef.current < 60) return;
     lastPositionWriteRef.current = now;
     setCurrentPositionMs(state.position);
     // Duration only changes when the track changes — but it's cheap to set
