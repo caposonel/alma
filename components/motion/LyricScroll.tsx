@@ -59,16 +59,22 @@ function findActiveLineIndex(
   return active;
 }
 
-function estimatePlainActiveIndex(
-  lineCount: number,
-  positionMs: number,
-  durationMs: number
-): number {
-  if (lineCount <= 0) return -1;
-  if (durationMs <= 0 || positionMs <= 0) return -1;
-  const ratio = Math.min(1, Math.max(0, positionMs / durationMs));
-  return Math.min(lineCount - 1, Math.floor(ratio * lineCount));
-}
+/* Plain (non-synced) lyric-line estimator REMOVED on 2026-05-23.
+ *
+ * It used to compute `(position / duration) * lineCount` to highlight a
+ * "currently active" line during playback when LRCLIB had no synced data.
+ * Problem: uniform interpolation across duration doesn't match how songs
+ * are actually sung — intros, instrumental breaks, choruses repeating,
+ * different line lengths all break the assumption. The result was
+ * seemingly-random words getting highlighted instead of what was being
+ * sung, which looked worse than no highlight at all.
+ *
+ * Alma's Hebrew indie folk catalog has no LRCLIB coverage, so the
+ * estimator was the only path active in practice. Now we just render the
+ * full lyric statically when no synced data is available — visitors can
+ * read at their own pace. The karaoke highlight stays available for any
+ * future tracks that do get LRCLIB entries.
+ */
 
 /* -------------------------------------------------------------------- */
 /*  Scroll-style animation tuning. ALL the lines render in a vertical   */
@@ -118,13 +124,15 @@ export function LyricScroll({
     ? syncedLines!.map((l) => l.text || " ")
     : (lines ?? []);
 
+  // -1 = no active line. Set when there's no synced data (so we render the
+  // full lyric static rather than highlight a wrong line per the uniform
+  // estimator). `durationMs` is intentionally unused now — kept in the
+  // prop signature so callers don't break, in case we re-enable the
+  // estimator behind a per-track flag later.
+  void durationMs;
   const activeIndex = hasSynced
     ? findActiveLineIndex(syncedLines!, currentTimeMs ?? 0)
-    : estimatePlainActiveIndex(
-        lineTexts.length,
-        currentTimeMs ?? 0,
-        durationMs ?? 0
-      );
+    : -1;
 
   /* The translateY we apply to the inner stack. Driven via a `MotionValue`
    * (not React state) so framer-motion controls the animation directly
@@ -213,16 +221,29 @@ export function LyricScroll({
           it. Mask-image only fades at the very edges (5% each side)
           because the active line is now centered, NOT at top — a heavier
           top mask was dimming the active line itself, which is the bug
-          you saw. */}
+          you saw.
+          When there's no synced data (no karaoke), we drop the height
+          clip + edge mask so the FULL lyric renders inline. Otherwise
+          long lyrics would be truncated invisibly with no scrolling
+          hint to the visitor (they'd only see the first ~6 lines). */}
       <div
         ref={viewportRef}
-        className="relative h-[50vh] min-h-[400px] overflow-hidden text-center"
-        style={{
-          maskImage:
-            "linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)",
-          WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)",
-        }}
+        className={cn(
+          "relative text-center",
+          hasSynced
+            ? "h-[50vh] min-h-[400px] overflow-hidden"
+            : "overflow-visible"
+        )}
+        style={
+          hasSynced
+            ? {
+                maskImage:
+                  "linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)",
+              }
+            : undefined
+        }
       >
         <motion.div
           ref={innerRef}
@@ -233,25 +254,26 @@ export function LyricScroll({
           style={{ y, willChange: "transform" }}
         >
           {lineTexts.map((text, i) => {
-            const isActive = i === activeIndex;
+            // Karaoke styling is ONLY applied when we have real synced
+            // timing data. Without it, every line renders at full
+            // opacity / no scale punch / no glow — the reader sees the
+            // complete lyric as a static text block they can scan at
+            // their own pace, rather than a (wrong-)highlighted slot
+            // moving randomly. See the long comment on the removed
+            // `estimatePlainActiveIndex` function above.
+            const showKaraoke = hasSynced;
+            const isActive = showKaraoke && i === activeIndex;
             return (
               <motion.p
                 key={i}
                 data-line-index={i}
                 animate={
-                  reducedMotion
+                  reducedMotion || !showKaraoke
                     ? { opacity: 1, scale: 1 }
                     : {
                         // Apple Music / Spotify treatment: active line
                         // dominates the panel, everything else recedes.
-                        // Opacity dropped from 0.35 → 0.22 so the dim
-                        // lines genuinely fade into the background and
-                        // the active one is unambiguously THE line.
                         opacity: isActive ? 1 : 0.22,
-                        // Bigger scale punch (was 1.06) — at 1.18 the
-                        // active line is visibly ~20% larger than its
-                        // neighbors, matching the visual hierarchy of
-                        // Apple Music's lyric panel.
                         scale: isActive ? 1.18 : 1,
                       }
                 }
