@@ -1,0 +1,9 @@
+export { Heart } from "./Heart";
+export { Daisy } from "./Daisy";
+export { Star } from "./Star";
+export { Butterfly } from "./Butterfly";
+export { Guitar } from "./Guitar";
+export { Squiggle } from "./Squiggle";
+export { Tape } from "./Tape";
+export { NotebookLines } from "./NotebookLines";
+export { MusicNote } from "./MusicNote";

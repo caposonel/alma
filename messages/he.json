@@ -1,0 +1,163 @@
+{
+  "nav": {
+    "home": "בית",
+    "diary": "יומן / מכתבים",
+    "music": "מוזיקה",
+    "shows": "הופעות",
+    "gallery": "גלריה",
+    "about": "אודות",
+    "contact": "צור קשר",
+    "store": "חנות"
+  },
+  "hero": {
+    "title": "עלמה גוב",
+    "line1": "זמרת, כותבת שירים ומלחינה.",
+    "line2": "אינדי-פופ, פולק ופופ-רוק עם השפעות ג׳אז.",
+    "line3": "שירים שהם מכתבים — לעצמי ולכם.",
+    "cta": "להאזנה"
+  },
+  "homepage": {
+    "shows": {
+      "title": "הופעות קרובות",
+      "details": "פרטים וכרטיסים »",
+      "allShows": "לכל ההופעות »",
+      "noUpcoming": "הופעות חדשות בקרוב",
+      "comingSoon": "פרטים בקרוב"
+    },
+    "diary": {
+      "title": "יומן / מכתבים",
+      "subtitle": "מילים שנכתבו בדרך. מחשבות, זיכרונות, שירים, וסיפורים קטנים.",
+      "readMore": "לקריאה ביומן »",
+      "stickyNote": "כל מה שאני לא מצליחה להגיד"
+    }
+  },
+  "music": {
+    "title": "מוזיקה",
+    "subtitle": "שירים, סינגלים, ואלבומים",
+    "lyricsTitle": "מילים",
+    "streamingTitle": "להאזנה בכל הפלטפורמות",
+    "listenOn": "להאזנה",
+    "sheetMusicTitle": "תווים והורדות",
+    "loading": "טוען…",
+    "backToMusic": "« חזרה למוזיקה",
+    "listenToSong": "האזינו לשיר",
+    "writtenBy": "מילים ולחן: עלמה גוב"
+  },
+  "mixtape": {
+    "title": "המיקס של עלמה",
+    "subtitle": "השירים שמלווים אותי",
+    "tracksHeading": "רצועות",
+    "playlistLabel": "מיקס",
+    "note": "בלי סדר מסוים — רק מה שמרגיש נכון השבוע"
+  },
+  "shows": {
+    "title": "הופעות",
+    "subtitle": "כל ההופעות הקרובות ושעברו — לכל מקום שאני מגיעה.",
+    "upcoming": "הופעות קרובות",
+    "past": "הופעות שעברו",
+    "tickets": "כרטיסים »",
+    "ticketsButton": "כרטיסים",
+    "soldOut": "אזל",
+    "comingSoon": "בקרוב",
+    "noUpcomingTitle": "הופעות חדשות בקרוב",
+    "noUpcoming": "הופעות חדשות בקרוב"
+  },
+  "gallery": {
+    "title": "גלריה",
+    "photos": "תמונות",
+    "sections": {
+      "official": "קליפים רשמיים",
+      "live": "הופעות חיות",
+      "session": "סשנים",
+      "behindScenes": "מאחורי הקלעים",
+      "interviews": "ראיונות",
+      "other": "וידאו"
+    }
+  },
+  "about": {
+    "title": "אודות",
+    "sectionFunFacts": "דברים שכדאי לדעת",
+    "sectionMilestones": "ציוני דרך",
+    "sectionInfluences": "השפעות מוזיקליות",
+    "sectionPressQuotes": "ציטוטים מהעיתונות",
+    "sectionPressPhotos": "תמונות לעיתונות",
+    "statsAlbums": "אלבומים",
+    "statsListens": "השמעות",
+    "statsYears": "שנות יצירה",
+    "statsSingles": "סינגלים",
+    "generalEmail": "פניות כלליות:",
+    "bookingEmail": "הזמנת הופעות:"
+  },
+  "diary": {
+    "title": "יומן / מכתבים",
+    "subtitle": "מחשבות, זיכרונות, שירים, וסיפורים קטנים.",
+    "subtitlePersonality": "כאן אני כותבת את מה שלא נכנס לשירים...",
+    "backToDiary": "« חזרה ליומן"
+  },
+  "contact": {
+    "title": "צור קשר",
+    "subtitle": "רוצים לשלוח מכתב? הזמנה להופעה? שאלה? כתבו לי.",
+    "formName": "שם",
+    "formNamePlaceholder": "השם שלכם",
+    "formEmail": "אימייל",
+    "formEmailPlaceholder": "your@email.com",
+    "formSubject": "נושא",
+    "formSubjectPlaceholder": "במה מדובר?",
+    "formMessage": "הודעה",
+    "formMessagePlaceholder": "כתבו כאן...",
+    "formSubmit": "לשלוח »",
+    "formSubmitting": "שולח...",
+    "formErrorName": "נא להזין שם",
+    "formErrorEmail": "כתובת אימייל לא תקינה",
+    "formErrorSubject": "נא להזין נושא",
+    "formErrorMessage": "ההודעה קצרה מדי",
+    "formErrorGeneric": "משהו השתבש, נסו שוב מאוחר יותר",
+    "formErrorValidation": "אנא בדקו את כל השדות",
+    "formErrorRateLimit": "יותר מדי הודעות לאחרונה. נסו שוב מאוחר יותר.",
+    "formErrorStorage": "שגיאה בשליחה. נסו שוב או כתבו לי ישירות ל-almagov.music@gmail.com",
+    "formThanks": "תודה!",
+    "formThanksDetail": "ההודעה נשלחה, אחזור אליכם בקרוב.",
+    "infoGeneralEmail": "אימייל כללי",
+    "infoBookingEmail": "הזמנות להופעות",
+    "infoFollow": "עקבו אחריי"
+  },
+  "footer": {
+    "tagline": "מילים, שירים, ושום שיגעון",
+    "copyright": "© עלמה גוב"
+  },
+  "error": {
+    "title": "משהו השתבש",
+    "subtitle": "סליחה, נתקלנו בבעיה. אפשר לנסות שוב.",
+    "retry": "נסה שוב"
+  },
+  "notFound": {
+    "title": "לא נמצא — עלמה גוב"
+  },
+  "common": {
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "retry": "נסה שוב",
+    "close": "סגור",
+    "languageSwitch": "EN"
+  },
+  "mailingBar": {
+    "prompt": "רוצים לקבל מכתבים כשיש חדשים?",
+    "sideTextStart": "תודה שאתם פה",
+    "sideTextEnd": "מילים סודות אצלי בשבילך",
+    "emailPlaceholder": "כתובת אימייל",
+    "submit": "להצטרפות",
+    "submitting": "שולח...",
+    "thanks": "תודה! נוסיף אותך לרשימה.",
+    "alreadySubscribed": "כבר רשום אצלי 🌸",
+    "errorValidation": "כתובת אימייל לא תקינה",
+    "errorRateLimit": "יותר מדי הרשמות לאחרונה. נסו שוב מאוחר יותר.",
+    "errorStorage": "שגיאה בהרשמה. נסו שוב מאוחר יותר.",
+    "closeLabel": "סגור",
+    "showFormLabel": "הצג טופס הרשמה"
+  },
+  "miniPlayer": {
+    "play": "הפעלה",
+    "pause": "השהיה",
+    "nowPlaying": "מנגן עכשיו"
+  }
+}

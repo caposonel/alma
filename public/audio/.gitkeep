@@ -1,0 +1,10 @@
+# Audio asset directory
+#
+# The site's sound effects (page-turn, paper-rustle, etc) are synthesized
+# in lib/audio.ts using the Web Audio API — no files required.
+#
+# To swap in a real recording, drop a file here (e.g. paper-rustle.mp3) and
+# update lib/audio.ts to fetch + decode it instead of calling generateSound().
+# Specifically:
+#   - polaroid hover triggers audioManager.playThrottled("paper-rustle"),
+#     which currently plays the synthesized buffer.
