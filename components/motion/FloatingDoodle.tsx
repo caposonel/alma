@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { useIsMobile } from "@/lib/use-is-mobile";
 
 interface FloatingDoodleProps {
   children: React.ReactNode;
@@ -28,8 +29,23 @@ export function FloatingDoodle({
   className,
 }: FloatingDoodleProps) {
   const reduced = useReducedMotion();
+  const isMobile = useIsMobile();
 
-  if (reduced) {
+  /* Skip the motion.div entirely on mobile or when reduced motion is on.
+   *
+   * Why: the homepage alone has 35 FloatingDoodle instances; about/contact/
+   * diary have another ~60 between them. Each renders a `motion.div` with
+   * `repeat: Infinity` keyframes that animate even when scrolled offscreen,
+   * keeping React + the compositor busy continuously. On mid-tier Android
+   * this directly tanks scroll FPS.
+   *
+   * The visual loss on mobile is small: most floating doodles are tucked
+   * behind `hidden md:block` Tailwind utilities anyway (so they were
+   * already invisible on phones, just paying the animation cost for no
+   * payoff). The few that ARE visible on mobile just lose their gentle
+   * bob — they still render statically with the same className.
+   */
+  if (reduced || isMobile) {
     return <div className={className}>{children}</div>;
   }
 

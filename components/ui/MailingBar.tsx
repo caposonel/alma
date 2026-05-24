@@ -156,7 +156,11 @@ export function MailingBar() {
             className={cn(
               "fixed bottom-0 start-0 end-0 z-30",
               "min-h-[70px] py-3 px-6",
-              "bg-paper-warm/95 backdrop-blur-sm",
+              // `backdrop-blur` is GPU-expensive on mid-tier phones when
+              // stacked with other fixed surfaces (header + this bar +
+              // mini-player). Limit it to ≥md so mobile gets a solid
+              // (still translucent) background without the blur.
+              "bg-paper-warm/95 md:backdrop-blur-sm",
               "border-t border-blush-200",
               "shadow-[0_-2px_8px_rgba(0,0,0,0.04)]"
             )}
@@ -164,12 +168,14 @@ export function MailingBar() {
             aria-label={t("prompt")}
             data-mailing-bar="bar"
           >
-            {/* Dismiss button — top-end so it overlaps the bar nicely. */}
+            {/* Dismiss button — top-end so it overlaps the bar nicely.
+                Larger padding (`p-3`) gives the 16×16 icon a 40×40 hit-
+                box, comfortable for thumb taps. */}
             <button
               type="button"
               onClick={() => persistDismissed(true)}
               aria-label={t("closeLabel")}
-              className="absolute top-1 end-2 rounded-full p-1 text-ink-soft transition-colors hover:bg-blush-100 hover:text-blush-500"
+              className="absolute top-0 end-0 rounded-full p-3 text-ink-soft transition-colors hover:bg-blush-100 hover:text-blush-500"
             >
               <X className="h-4 w-4" />
             </button>
@@ -328,7 +334,7 @@ export function MailingBar() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
             transition={{ type: "spring", damping: 18 }}
-            className="fixed bottom-4 end-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-paper-warm/95 text-blush-500 shadow-md ring-1 ring-blush-200 backdrop-blur-sm hover:text-blush-600"
+            className="fixed bottom-4 end-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-paper-warm/95 text-blush-500 shadow-md ring-1 ring-blush-200 md:backdrop-blur-sm hover:text-blush-600"
           >
             <Heart className="h-5 w-5" />
           </motion.button>
@@ -404,12 +410,13 @@ function MiniPlayer({
 
   return (
     <div className="mx-auto flex max-w-6xl items-center gap-3">
-      {/* Play / pause button */}
+      {/* Play / pause button. 44×44 on mobile (WCAG touch target),
+          36×36 on desktop (more compact mouse target). */}
       <button
         type="button"
         onClick={onTogglePlay}
         aria-label={isPaused ? playLabel : pauseLabel}
-        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-blush-400 bg-blush-500 text-white shadow-sm transition-colors hover:border-blush-600 hover:bg-blush-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
+        className="flex h-11 w-11 md:h-9 md:w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-blush-400 bg-blush-500 text-white shadow-sm transition-colors hover:border-blush-600 hover:bg-blush-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
       >
         {isPaused ? (
           <Play className="h-3.5 w-3.5 fill-current translate-x-[1px]" aria-hidden="true" />
@@ -484,7 +491,11 @@ function MiniPlayer({
           type="button"
           onClick={() => onVolumeChange(volume === 0 ? 1 : 0)}
           aria-label={volume === 0 ? "ביטול השתקה" : "השתק"}
-          className="text-ink-soft transition-colors hover:text-blush-500 focus:outline-none focus-visible:text-blush-500"
+          /* Inflate the tap target with `-m-2 p-2` (invisible padding that
+             extends the click area to 32×32 around the 16×16 icon — still
+             below the 44px guideline, but the volume widget is sm:+ only
+             where mouse is primary). */
+          className="-m-2 p-2 text-ink-soft transition-colors hover:text-blush-500 focus:outline-none focus-visible:text-blush-500"
         >
           <VolumeIcon className="h-4 w-4" aria-hidden="true" />
         </button>

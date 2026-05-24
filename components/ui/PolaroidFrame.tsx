@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Heart, Star } from "@/components/decorative";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { useIsTouchDevice } from "@/lib/use-is-mobile";
 import { viewportOnce } from "@/lib/motion";
 import { audioManager } from "@/lib/audio";
 
@@ -60,6 +61,7 @@ export function PolaroidFrame({
 }: PolaroidFrameProps) {
   const rot = rotation ?? deterministicRotation(src);
   const reducedMotion = useReducedMotion();
+  const isTouch = useIsTouchDevice();
   const [isFlipped, setIsFlipped] = useState(false);
 
   const hasFlip = !!flipNote && animated;
@@ -224,6 +226,30 @@ export function PolaroidFrame({
   }
 
   // --- Standard animated render ---
+  // On touch devices: render a plain div with the rotation transform —
+  // skip the `motion.div`, hover springs, and the audio-rustle callback.
+  // Why: iOS synthesizes pointer events from taps, which used to fire
+  // `audioManager.playThrottled("paper-rustle")` on EVERY tap (causing a
+  // perceptible stutter); plus the `whileHover` springs are dead UX on
+  // touch (no hover state ever lingers). The static div keeps the
+  // visual rotation + decorative hearts intact.
+  if (isTouch) {
+    return (
+      <div
+        className={cn("relative inline-block", className)}
+        style={{ transform: `rotate(${rot}deg)` }}
+      >
+        {front}
+        {decorate && (
+          <>
+            <Heart className="absolute -top-2 -end-2 h-4 w-4 rotate-12" />
+            <Heart className="absolute -bottom-1 -start-2 h-3 w-3 -rotate-12" />
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className={cn("relative inline-block", className)}

@@ -75,7 +75,7 @@ export function Header({ storeUrl }: HeaderProps) {
         className={cn(
           "sticky top-0 z-50 transition-all duration-200",
           scrolled
-            ? "border-b border-blush-100/50 bg-paper/95 backdrop-blur-sm"
+            ? "border-b border-blush-100/50 bg-paper/95 md:backdrop-blur-sm"
             : "bg-paper"
         )}
       >
@@ -156,9 +156,13 @@ export function Header({ storeUrl }: HeaderProps) {
                 <YoutubeIcon className="h-5 w-5" />
               </a>
             </div>
+            {/* WCAG 2.5.5 wants 44×44px minimum hit-box on touch.
+                `p-2.5` brings the 24×24 icon up to 44×44 with comfortable
+                padding for thumb taps. `-m-2.5` keeps visual alignment
+                with the surrounding nav (the extra padding is invisible). */}
             <button
               onClick={() => setDrawerOpen(true)}
-              className="text-ink-soft md:hidden"
+              className="-m-2.5 p-2.5 text-ink-soft md:hidden"
               aria-label="Menu"
             >
               <Menu className="h-6 w-6" />

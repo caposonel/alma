@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { useIsMobile } from "@/lib/use-is-mobile";
 
 interface ParallaxLayerProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ export function ParallaxLayer({
 }: ParallaxLayerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const isMobile = useIsMobile();
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -33,7 +35,12 @@ export function ParallaxLayer({
 
   const y = useTransform(scrollYProgress, [0, 1], [0, speed * 200]);
 
-  if (reduced) {
+  // Skip the parallax transform on mobile. The visual effect is ±20px
+  // of vertical lag on decorative doodles (most of which are inside
+  // `hidden md:block` wrappers and never visible on phones anyway).
+  // The cost is one `useScroll` + one `useTransform` subscription per
+  // ParallaxLayer instance — diary page alone has 3, lyrics has 4.
+  if (reduced || isMobile) {
     return (
       <div ref={ref} className={className}>
         {children}

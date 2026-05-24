@@ -175,11 +175,19 @@ export function YouTubeEmbedPlayer({
         const p = playerRef.current;
         if (!p) return;
         try {
+          // Skip the poll entirely when the player is paused / ended /
+          // not playing: position doesn't change, so re-rendering the
+          // mini-player progress bar every 100ms is pure cost. Only poll
+          // at the full rate while actively playing (state === 1).
+          // The `onStateChange` event handler still fires an immediate
+          // update on play/pause transitions, so the UI stays in sync
+          // without continuous polling.
+          if (p.getPlayerState() !== 1) return;
           emitPlaybackUpdate(p);
         } catch {
           /* getCurrentTime can throw if the player is being destroyed */
         }
-      }, 100); // ~10 Hz, well within React's batch window
+      }, 100); // ~10 Hz while playing
     }
 
     function emitPlaybackUpdate(p: YouTubePlayer) {

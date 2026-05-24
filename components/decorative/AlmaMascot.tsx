@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { useIsMobile } from "@/lib/use-is-mobile";
 
 type MascotState = "idle" | "scrolling-up" | "scrolling-down" | "top" | "bottom" | "clicked";
 
@@ -11,10 +12,25 @@ type MascotState = "idle" | "scrolling-up" | "scrolling-down" | "top" | "bottom"
 const PETAL_UNLOCK_CLICKS = 3;
 const PETAL_UNLOCK_WINDOW_MS = 3000;
 
+/**
+ * The outer gate. Conditionally mounts the actual mascot implementation
+ * based on viewport width. This MATTERS for mobile performance: the
+ * inner component subscribes to `useMotionValueEvent(scrollY, "change",
+ * ...)` which fires on every scroll event. If the inner component is
+ * mounted (even with an early return), the listener is still active —
+ * each scroll forces a `document.documentElement.scrollHeight` read +
+ * delta compute for nothing. Gating at the OUTER level means the hook
+ * never runs at all on phones.
+ */
 export function AlmaMascot() {
+  const isMobile = useIsMobile();
+  if (isMobile) return null;
+  return <MascotImpl />;
+}
+
+function MascotImpl() {
   const [state, setState] = useState<MascotState>("top");
   const [hearts, setHearts] = useState<number[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
   const { scrollY } = useScroll();
   const prefersReduced = useReducedMotion();
   const clickCountRef = useRef(0);
@@ -24,13 +40,6 @@ export function AlmaMascot() {
   // click would still fire after navigation away, triggering setState on
   // an unmounted component (React dev warning).
   const clickResetTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   // Clear the click-reset timer on unmount.
   useEffect(() => {
@@ -84,9 +93,6 @@ export function AlmaMascot() {
       clickCountRef.current = 0;
     }
   }, []);
-
-  // Hidden on mobile
-  if (isMobile) return null;
 
   const getRotation = () => {
     if (prefersReduced) return 0;

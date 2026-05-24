@@ -1,12 +1,10 @@
 import { Metadata } from "next";
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { PolaroidFrame, HandwrittenUnderline, Button, DoodleScatter } from "@/components/ui";
+import { HandwrittenUnderline, Button, DoodleScatter } from "@/components/ui";
 import {
   Heart,
   Daisy,
   Star,
-  Tape,
   Butterfly,
   MusicNote,
   Guitar,
@@ -14,6 +12,7 @@ import {
 } from "@/components/decorative";
 import { ScrollReveal, FloatingDoodle, MagneticElement } from "@/components/motion";
 import { HeroAnimations, HeroLineStagger, HeroPulseButton } from "./HeroAnimations";
+import { HeroPhoto } from "./HeroPhoto";
 import { DiaryCard } from "./DiaryCard";
 import { ShowsCard } from "./ShowsCard";
 import { EditableLongText } from "@/components/admin/Editable";
@@ -201,92 +200,11 @@ function HeroSection({
             small hearts above + below, a sparkle bottom-corner, a
             couple of accents on the sides. */}
         <ScrollReveal direction="left" className="flex-shrink-0">
-          {/* Desktop: BIG landscape polaroid — same wide footprint as
-              the previous hero, but the 16/9 aspect makes it even
-              less tall than the earlier 3/2 crop. Width at ~44rem
-              (md) / ~60rem (lg) combined with max-w-7xl puts the
-              photo right at the side edge of the viewport. */}
-          <div
-            className="hidden md:block relative w-[44rem] lg:w-[60rem]"
-            style={{ transform: "rotate(-2.5deg)" }}
-          >
-            <div className="overflow-hidden rounded-sm bg-white p-3 pb-6 shadow-lg">
-              <Image
-                src="/images/alma-portrait-casual.jpg"
-                alt={title}
-                // Source is 1044×587 native (16:9 landscape). We
-                // declare those exact dimensions so Next's optimizer
-                // sees the true aspect, then aspect-[16/9] on the
-                // rendered box matches — so object-cover effectively
-                // does no cropping; the photo renders exactly as
-                // captured.
-                width={1044}
-                height={587}
-                priority
-                // quality 92 (vs default 75) — near-lossless for the
-                // hero. Allowlisted in next.config.ts under
-                // `images.qualities`. The source is only 1044px wide
-                // so at lg the optimizer barely scales it down (display
-                // ~960px), which keeps the image sharp.
-                quality={92}
-                sizes="(min-width: 1024px) 60rem, (min-width: 768px) 44rem, 90vw"
-                // aspect-[16/9] matches the source's native ratio — no
-                // cropping. The polaroid is noticeably less tall than
-                // the previous 3:2 framing, leaning further into the
-                // "wide horizontal scrapbook photo" look.
-                className="h-auto w-full rounded-sm object-cover aspect-[16/9]"
-              />
-            </div>
-            {/* Hand-drawn-looking doodles around the photo — denser than
-                before, matching the mockup's scattered marginalia around
-                the hero polaroid. Mostly small hearts + a couple of
-                stars and a sparkle, all rotated and floating at
-                slightly different rates so they read as hand-placed
-                stickers rather than evenly spaced ornaments. */}
-            <FloatingDoodle className="absolute -top-6 -start-4" intensity={3} duration={7}>
-              <Heart className="h-7 w-7 opacity-80 -rotate-12" />
-            </FloatingDoodle>
-            <FloatingDoodle className="absolute -top-3 end-12" intensity={4} duration={6}>
-              <Heart className="h-3 w-3 opacity-60 rotate-12" />
-            </FloatingDoodle>
-            <FloatingDoodle className="absolute top-1/4 -end-5" intensity={3} duration={8}>
-              <Heart className="h-4 w-4 opacity-55 rotate-45" />
-            </FloatingDoodle>
-            <FloatingDoodle className="absolute top-2/3 -start-5" intensity={4} duration={7}>
-              <Star className="h-4 w-4 opacity-55 -rotate-12" />
-            </FloatingDoodle>
-            <FloatingDoodle className="absolute -bottom-4 -start-5" intensity={3} duration={8}>
-              <Heart className="h-5 w-5 opacity-70 rotate-6" />
-            </FloatingDoodle>
-            <FloatingDoodle className="absolute -bottom-3 start-1/3" intensity={4} duration={6}>
-              <Star className="h-3 w-3 opacity-50 rotate-12" variant="filled" />
-            </FloatingDoodle>
-            <FloatingDoodle className="absolute -bottom-2 end-8" intensity={3} duration={9}>
-              <MusicNote className="h-4 w-3 opacity-50 -rotate-6" />
-            </FloatingDoodle>
-            <FloatingDoodle className="absolute bottom-12 -end-7" intensity={4} duration={7}>
-              <Butterfly className="h-6 w-7 opacity-50 rotate-6" />
-            </FloatingDoodle>
-          </div>
-          {/* Mobile: same casual portrait as desktop. Declared dims
-              720×405 — same 16:9 native ratio as the 1044×587 source,
-              so PolaroidFrame's internal Image doesn't crop.
-              No `priority` here: BOTH the desktop `<Image priority>` above
-              AND this mobile <Image> live in the DOM at the same time
-              (only their breakpoint visibility differs via hidden/md:hidden);
-              if both were priority, Next would eagerly preload both
-              variants, doubling LCP bandwidth on every visit. The desktop
-              one keeps priority since it's the actual hero on the screens
-              that affect LCP scoring; the mobile one falls back to lazy. */}
-          <PolaroidFrame
-            src="/images/alma-portrait-casual.jpg"
-            alt={title}
-            rotation={-2.5}
-            decorate
-            width={720}
-            height={405}
-            className="w-80 md:hidden"
-          />
+          {/* `HeroPhoto` picks desktop vs mobile variant at runtime via
+              useIsMobile — only ONE Image is mounted in the DOM at a
+              time, only ONE gets `priority`, and the 8 FloatingDoodle
+              instances only mount on desktop. */}
+          <HeroPhoto title={title} />
         </ScrollReveal>
       </div>
     </section>

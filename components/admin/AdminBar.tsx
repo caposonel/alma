@@ -32,7 +32,7 @@ export function AdminBar({ locale }: { locale: string }) {
       initial={{ y: -32, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2, duration: 0.25 }}
-      className="fixed top-0 start-0 end-0 z-[55] flex items-center justify-between gap-2 bg-neutral-900/95 px-4 py-1.5 text-xs text-white shadow-md backdrop-blur-sm"
+      className="fixed top-0 start-0 end-0 z-[55] flex items-center justify-between gap-2 bg-neutral-900/95 px-4 py-1.5 text-xs text-white shadow-md md:backdrop-blur-sm"
       role="region"
       aria-label="Admin toolbar"
     >

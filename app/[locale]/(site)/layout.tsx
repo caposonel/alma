@@ -1,12 +1,11 @@
 import { Header, Footer } from "@/components/layout";
-import { PageTransition, ScrollProgress, PetalTrail } from "@/components/motion";
-import { PaperBackground } from "@/components/motion/PaperBackground";
+import { PageTransition, ScrollProgress } from "@/components/motion";
 import { AlmaMascot } from "@/components/decorative/AlmaMascot";
-import { StickerSheet } from "@/components/ui/StickerSheet";
 import { MailingBar } from "@/components/ui/MailingBar";
 import { MusicPlayerProvider } from "@/lib/music-player-context";
 import { AdminModeProvider } from "@/lib/admin-mode-context";
 import { EditorSidebar } from "@/components/admin/EditorSidebar";
+import { ClientExtras } from "./_ClientExtras";
 import { auth } from "@/auth";
 import { getSettingsAdmin } from "@/lib/admin-store";
 import { SOCIAL_LINKS } from "@/lib/config";
@@ -33,7 +32,6 @@ export default async function SiteLayout({
   return (
     <AdminModeProvider isAdmin={isAdmin}>
       <MusicPlayerProvider>
-        <PaperBackground />
         <ScrollProgress />
         <Header storeUrl={storeUrl} />
         <PageTransition>
@@ -42,9 +40,11 @@ export default async function SiteLayout({
         </PageTransition>
         <Footer />
         <AlmaMascot />
-        <StickerSheet />
-        <PetalTrail />
         <MailingBar />
+        {/* Rarely-active decorative client components — code-split
+            (next/dynamic) so the initial bundle doesn't ship JS for the
+            StickerSheet easter egg or WebGL PaperBackground. */}
+        <ClientExtras />
         {/* Slide-in editor — only activates when this page is loaded inside
             the /admin/edit preview iframe (see AdminModeProvider). Stays
             mounted but inert in normal public-site visits. */}
