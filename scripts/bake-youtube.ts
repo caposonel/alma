@@ -25,41 +25,47 @@ import path from "node:path";
  *     possibly the same song under different titles in Alma's catalog,
  *     or one is a mis-titled admin entry)
  */
+/* ALL IDs verified against YouTube oEmbed on 2026-05-24. The earlier
+ * mapping had an off-by-one bug in the channel-page extraction (regex
+ * paired each videoId with the NEXT title in the JSON dump). All
+ * mismatches were re-fetched via YouTube search (which queries YT's own
+ * index with author filter to Alma-related channels). */
 const YOUTUBE_IDS: Record<string, string> = {
   // 16 karaoke tracks
   "shir-varod": "ucovqKLT9-k", // official clip
   "ma-laasot-im-hazeev": "P1cKG1iG59Q",
-  "lifney-shehakol-nirdam": "snUVtjUvZSk",
-  "olam-sheli": "RTZxnN0iNVA",
-  "ze-hasof": "M29o4jLOsW8",
-  "shuv-bamidbar": "31b4bdlVdIQ",
-  "obsesia-2": "sgMNWs-oEog",
+  "lifney-shehakol-nirdam": "UJtWTWedOWs", // FIXED (was snUVtjUvZSk = פתיחה??)
+  "olam-sheli": "myAz0gBpRWo", // FIXED (was RTZxnN0iNVA = מחכה לזה)
+  "ze-hasof": "sgMNWs-oEog", // FIXED (was M29o4jLOsW8 = אש ומים)
+  "shuv-bamidbar": "R41N4QtnXS0", // FIXED (was 31b4bdlVdIQ = זה הסוף)
+  "obsesia-2": "Ymn9jDsg7Q0", // FIXED (was sgMNWs-oEog = זה הסוף)
   "al-temaher": "umcBKQIdsKI",
   "ze-beseder": "OFmdJz3KYpI",
   "teref": "J1hixtopXdY",
-  "bein-haetzbaot": "Ymn9jDsg7Q0",
+  "bein-haetzbaot": "WBh0QhZp4-c", // FIXED (was Ymn9jDsg7Q0 = אובססיה 2)
   "od-shir-katan": "TfAO44Ft0gQ",
   "lechabot-et-haorot": "CyhuBnuaHWg",
   "lo-mevina-otcha-yoter": "2jFe980nAyY",
   "shir-katan": "TfAO44Ft0gQ", // same recording as od-shir-katan
-  "shuv-latzet": "SV_vSMslHmw",
+  "shuv-latzet": "8gvjuxz7U8k", // FIXED (was SV_vSMslHmw = השיר על האנשים שאכזבו אותי)
 
-  // Additional non-karaoke tracks with YouTube videos (playable in browser,
-  // but no lyrics card since no LRC timing data exists for them).
+  // Non-karaoke tracks with YouTube videos
   "bsibub": "7TacEhQIvmU",
-  "yamim-aruchim": "R41N4QtnXS0",
-  "esh-vemayim": "nK_Rm705yVQ",
-  "mechaka-laze": "-hd_MD3TqpE",
-  "ten-li": "rN1-BP1o02o",
-  "bechol-zot-ohevet-otcha": "mkhvmwWX-NQ",
-  "keevim-bachaze": "xt_vOaFjDXk",
+  "yamim-aruchim": "hI8u8NXjAQg", // FIXED (was R41N4QtnXS0 = שוב במדבר)
+  "esh-vemayim": "M29o4jLOsW8", // FIXED (was nK_Rm705yVQ = שיר ורוד lyric)
+  "mechaka-laze": "RTZxnN0iNVA", // FIXED (was -hd_MD3TqpE = דופק!)
+  "ten-li": "ZfriW8vDjYw", // FIXED (was rN1-BP1o02o = בכלזאתאוהבתאותך)
+  // bechol-zot-ohevet-otcha: search couldn't find a clean match —
+  // skipped. The track stays in the discography without a YouTube
+  // video, so clicking it won't play (but won't break either).
+  "keevim-bachaze": "mkhvmwWX-NQ", // FIXED (was xt_vOaFjDXk = שיר ורוד)
   "meuchar-midai": "IANoKHU07pQ",
   "bli-milim": "KNrVV3Jh4t4",
   "beintayim-al-haadama": "YNvhn8_a5z0",
   "shum-sikuy": "88QGwfQNNtY",
   "im-tashir-oti-kach": "W7EgYn7rBLE",
-  "mul-hachofesh": "0-OgtxLsojo",
-  "siba-lehamshich": "UJtWTWedOWs",
+  "mul-hachofesh": "NR0YwtRbVP8", // FIXED (was 0-OgtxLsojo = שוב לצאת דמו)
+  "siba-lehamshich": "2EOwhYm1a9w", // FIXED (was UJtWTWedOWs = לפני שהכל נרדם)
 };
 
 interface Track {
