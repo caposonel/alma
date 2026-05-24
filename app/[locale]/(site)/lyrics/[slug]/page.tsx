@@ -10,6 +10,37 @@ import {
   getStaticLyricBySlug,
   type StaticLyric,
 } from "@/lib/static-lyrics";
+import { looksLikeLRC } from "@/lib/lrclib";
+
+/* When the admin store's `lyricsHe` has been baked with LRC timestamps
+ * (for karaoke on /music), the raw text looks like:
+ *
+ *   [00:12.40]שיר ורוד על השפתיים
+ *   [00:15.80]מילים שנכתבו בלילה
+ *
+ * The /lyrics/[slug] page is a static reading view, not a karaoke
+ * panel — so we strip the leading `[mm:ss.xx]` from each line before
+ * rendering. Plain-text entries are returned unchanged. */
+function stripLrcTimestamps(text: string): string {
+  if (!text || !looksLikeLRC(text)) return text;
+  return text
+    .split("\n")
+    .map((line) => line.replace(/^\[\d{1,2}:\d{2}(?:\.\d{1,3})?\]\s*/, ""))
+    .filter((line, idx, arr) => {
+      // Drop LRC metadata-only lines like `[ar: Alma Gov]` that have
+      // nothing left after the bracket strip. Keep genuine blank
+      // lines that come from the lyric body (between stanzas).
+      if (line.trim().length > 0) return true;
+      // A blank line is real only if the original line WAS blank
+      // (i.e. the regex didn't strip anything → it stays an empty
+      // line). Lines that were `[ar: …]` get reduced to "" and
+      // should drop.
+      const orig = text.split("\n")[idx];
+      return orig === "" || orig === "\r";
+    })
+    .join("\n")
+    .trim();
+}
 import { SpotifyIcon } from "@/components/ui/SocialIcons";
 
 export const revalidate = 60;
@@ -183,7 +214,7 @@ export default async function LyricsPage({ params }: Props) {
                   lineSpacing={48}
                 >
                   <LyricsReveal
-                    text={lyric.lyricsHe}
+                    text={stripLrcTimestamps(lyric.lyricsHe)}
                     dir="rtl"
                     className="whitespace-pre-wrap font-display text-2xl leading-[48px] text-ink md:text-3xl md:leading-[48px]"
                     style={{ fontFamily: "var(--font-display)" }}

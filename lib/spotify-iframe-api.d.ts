@@ -56,6 +56,17 @@ export interface SpotifyEmbedController {
   togglePlay: () => void;
   /** Seek to a position. Argument is seconds (not milliseconds). */
   seek: (seconds: number) => void;
+  /**
+   * Set playback volume on the embedded player. Argument is 0-1.
+   *
+   * NOT officially documented by Spotify — empirically present on some
+   * builds of `https://open.spotify.com/embed/iframe-api/v1` and absent
+   * on others. Typed as optional so the call site must use optional
+   * chaining; we also send a postMessage fallback (see music-player-
+   * context.tsx) for builds that don't expose this method on the
+   * controller object.
+   */
+  setVolume?: (volume: number) => void;
   /** Subscribe to playback events. */
   addListener: (
     event: SpotifyEmbedEvent,

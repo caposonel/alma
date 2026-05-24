@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { SpotifyEmbedController } from "@/components/ui/SpotifyEmbedWithLyrics";
+import type { YouTubePlayerController } from "@/components/ui/YouTubeEmbedPlayer";
 
 /**
  * Global music-player state shared between the `/music` page (which owns the
@@ -38,13 +38,16 @@ export interface CurrentTrack {
 }
 
 interface MusicPlayerContextValue {
-  controller: SpotifyEmbedController | null;
-  setController: (controller: SpotifyEmbedController | null) => void;
+  controller: YouTubePlayerController | null;
+  setController: (controller: YouTubePlayerController | null) => void;
   currentTrack: CurrentTrack | null;
   setCurrentTrack: (track: CurrentTrack | null) => void;
   positionMs: number;
   durationMs: number;
   isPaused: boolean;
+  /** Volume, 0..1. Initial value is 1 (matches Spotify embed default). */
+  volume: number;
+  setVolume: (volume: number) => void;
   updatePlaybackState: (state: {
     positionMs: number;
     durationMs: number;
@@ -55,13 +58,14 @@ interface MusicPlayerContextValue {
 const MusicPlayerContext = createContext<MusicPlayerContextValue | null>(null);
 
 export function MusicPlayerProvider({ children }: { children: ReactNode }) {
-  const [controller, setController] = useState<SpotifyEmbedController | null>(
+  const [controller, setController] = useState<YouTubePlayerController | null>(
     null
   );
   const [currentTrack, setCurrentTrack] = useState<CurrentTrack | null>(null);
   const [positionMs, setPositionMs] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
+  const [volume, setVolumeState] = useState(1);
 
   const updatePlaybackState = useCallback(
     (state: { positionMs: number; durationMs: number; isPaused: boolean }) => {
@@ -70,6 +74,59 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       setIsPaused(state.isPaused);
     },
     []
+  );
+
+  /* Set the Spotify embed's volume.
+   *
+   * Spotify's IFrame API doesn't officially document a setVolume method,
+   * so we attempt to set it three ways and hope one sticks:
+   *   1. controller.setVolume(0-1) — exists on some IFrame API builds
+   *   2. postMessage to the iframe with command names Spotify might
+   *      respond to (`set_volume`, `volume`)
+   *   3. Update our local state regardless, so the slider UI moves.
+   *
+   * If none of the underlying methods work, the slider becomes a
+   * cosmetic control (visible movement, no audio change). The Spotify
+   * embed format we use doesn't have its own volume UI, so visitors
+   * still need device-level volume to actually change loudness. */
+  const setVolume = useCallback(
+    (v: number) => {
+      const clamped = Math.max(0, Math.min(1, v));
+      setVolumeState(clamped);
+
+      // 1) Try the (undocumented but sometimes present) controller method
+      try {
+        controller?.setVolume?.(clamped);
+      } catch {
+        /* swallow */
+      }
+
+      // 2) postMessage fallback — find Spotify's iframe in the DOM and
+      // send the volume command using known/guessed payload shapes.
+      // Spotify's iframe lives at /embed/iframe-api/v1 (or similar)
+      // under their `open.spotify.com` origin.
+      try {
+        const iframe = document.querySelector<HTMLIFrameElement>(
+          'iframe[src*="open.spotify.com/embed"]'
+        );
+        if (iframe?.contentWindow) {
+          // Spotify expects messages stringified with a specific shape;
+          // we send several variants because Spotify has shipped
+          // different message formats across IFrame API versions.
+          for (const payload of [
+            { command: "set_volume", value: clamped },
+            { command: "volume", value: clamped },
+            { type: "set_volume", value: clamped },
+            { type: "volume", value: clamped },
+          ]) {
+            iframe.contentWindow.postMessage(payload, "*");
+          }
+        }
+      } catch {
+        /* swallow */
+      }
+    },
+    [controller]
   );
 
   const value = useMemo<MusicPlayerContextValue>(
@@ -81,9 +138,20 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       positionMs,
       durationMs,
       isPaused,
+      volume,
+      setVolume,
       updatePlaybackState,
     }),
-    [controller, currentTrack, positionMs, durationMs, isPaused, updatePlaybackState]
+    [
+      controller,
+      currentTrack,
+      positionMs,
+      durationMs,
+      isPaused,
+      volume,
+      setVolume,
+      updatePlaybackState,
+    ]
   );
 
   return (

@@ -86,6 +86,36 @@ export function LyricForm({ lyric, action, deleteAction, slugLocked }: Props) {
               textAlign: "start",
             }}
           />
+          <small
+            style={{
+              display: "block",
+              marginTop: 6,
+              fontSize: 11,
+              lineHeight: 1.5,
+              color: "#5A4F4A",
+            }}
+          >
+            <strong>Plain text:</strong> renders statically next to the embed
+            (no karaoke highlight).
+            <br />
+            <strong>LRC format:</strong> if every line is prefixed with
+            <code style={{ background: "#f4ece4", padding: "0 4px", borderRadius: 2 }}>
+              [mm:ss.xx]
+            </code>
+            (e.g. <code style={{ background: "#f4ece4", padding: "0 4px", borderRadius: 2 }}>
+              [00:12.40]שיר ורוד על השפתיים
+            </code>), the player will auto-detect and karaoke-highlight the
+            active line. Generate an LRC file with{" "}
+            <a
+              href="https://lrcgenerator.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#9c4848" }}
+            >
+              lrcgenerator.com
+            </a>{" "}
+            or any LRC editor.
+          </small>
         </label>
       </FieldRow>
 

@@ -196,6 +196,14 @@ export interface AdminLyric {
   titleHe: string;
   lyricsHe: string;
   spotifyTrackId?: string;
+  /**
+   * 11-character YouTube video ID for in-browser audio playback. When set,
+   * `MusicPlayerSection` uses the YouTube IFrame API for the actual audio
+   * source (so we can drive volume / play / pause / seek). When unset,
+   * the track falls back to a Spotify embed link-out (no playback).
+   * Populated by `scripts/bake-youtube.ts`.
+   */
+  youtubeId?: string;
   releaseTitle?: string;
   releaseDate?: string;
 }

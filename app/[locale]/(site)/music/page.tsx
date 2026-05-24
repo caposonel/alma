@@ -24,7 +24,6 @@ const SPOTIFY_ARTIST_ID = "5BwDD7OLlEuoLxt0cTHaYv";
 // "עולם שלי" album URI — used as the initial URI for the IFrame-API-driven
 // player at the top of the page. When the visitor presses play, the IFrame
 // API emits `playback_update` events that drive the lyrics card below.
-const FEATURED_ALBUM_URI = "spotify:album:7DEvEtOMZIcNVfWN3p84w1";
 
 export const revalidate = 60;
 
@@ -191,15 +190,13 @@ export default async function MusicPage() {
    * drives the AlbumDiscography under the embed. */
   const albums = await buildAlbumDiscography(adminLyrics);
 
-  /* The "default" track — first track of the newest album in the discography.
-   * Drives both the initial embed URI AND the initial lyrics card so visitors
-   * see real song lyrics on first paint instead of a "click a song" placeholder.
-   * Falls back to FEATURED_ALBUM_URI if the admin store is empty (no tracks
-   * to choose from). */
-  const defaultTrackId = albums[0]?.tracks[0]?.spotifyTrackId;
-  const initialEmbedUri = defaultTrackId
-    ? `spotify:track:${defaultTrackId}`
-    : FEATURED_ALBUM_URI;
+  /* The "default" video — first track of the newest album that has a
+   * YouTube videoId baked in. We use YouTube for the actual audio
+   * playback now (so volume control works); Spotify embeds didn't
+   * expose volume programmatically. Falls back to a known-good fallback
+   * if the admin store is empty. */
+  const initialVideoId =
+    albums.flatMap((a) => a.tracks).find((t) => t.youtubeId)?.youtubeId ?? "ucovqKLT9-k";
 
   /* Build MusicAlbum JSON-LD entries from the same data so the discography
    * and the structured data stay in sync. */
@@ -258,11 +255,10 @@ export default async function MusicPage() {
             spotifyTrackId; otherwise the static fallback ("שיר ורוד") shows. */}
         <ScrollReveal as="section" className="mt-10" delay={0.15}>
           <MusicPlayerSection
-            initialUri={initialEmbedUri}
+            initialVideoId={initialVideoId}
             adminLyrics={adminLyrics}
             albums={albums}
             fallbackTitle="בחרי שיר מההפקה למטה"
-            fallbackLines={["לחצי על אחד השירים בהפקה למטה כדי להשמיע אותו ולראות את המילים כאן."]}
             fallbackCredit={t("writtenBy")}
             spotifyLoadingLabel={t("loading")}
             embedClassName="mx-auto max-w-2xl overflow-hidden rounded-xl bg-white p-3 shadow-md paper-fold"

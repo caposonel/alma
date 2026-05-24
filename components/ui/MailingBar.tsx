@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pause, Play, X } from "lucide-react";
+import { Pause, Play, Volume1, Volume2, VolumeX, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Heart, Guitar, Butterfly } from "@/components/decorative";
 import { cn } from "@/lib/utils";
@@ -190,6 +190,7 @@ export function MailingBar() {
                   isPaused={player.isPaused}
                   positionMs={player.positionMs}
                   durationMs={player.durationMs}
+                  volume={player.volume}
                   onTogglePlay={() => {
                     try {
                       player.controller?.togglePlay();
@@ -204,6 +205,7 @@ export function MailingBar() {
                       /* same — see above */
                     }
                   }}
+                  onVolumeChange={(v) => player.setVolume(v)}
                   playLabel={playerLabels.play}
                   pauseLabel={playerLabels.pause}
                   nowPlayingLabel={playerLabels.nowPlaying}
@@ -347,9 +349,12 @@ interface MiniPlayerProps {
   isPaused: boolean;
   positionMs: number;
   durationMs: number;
+  volume: number;
   onTogglePlay: () => void;
   /** Seek target in SECONDS (Spotify's controller.seek expects seconds). */
   onSeek: (seconds: number) => void;
+  /** New volume value, 0..1. */
+  onVolumeChange: (volume: number) => void;
   playLabel: string;
   pauseLabel: string;
   nowPlayingLabel: string;
@@ -360,18 +365,26 @@ function MiniPlayer({
   isPaused,
   positionMs,
   durationMs,
+  volume,
   onTogglePlay,
   onSeek,
+  onVolumeChange,
   playLabel,
   pauseLabel,
   nowPlayingLabel,
 }: MiniPlayerProps) {
-  const percent = durationMs > 0 ? Math.min(100, (positionMs / durationMs) * 100) : 0;
+  /* `durationMs <= 0` is a transient state during a track switch:
+   * MusicPlayerSection resets both position and duration to 0 the
+   * moment a new track is selected, then Spotify's playback_update
+   * event fires (some hundreds of ms later) with the real duration.
+   * In that gap we suppress the time-display and pin the progress bar
+   * to 0% — otherwise the bar shows nonsense like "3:01 / 0:00" or
+   * "3:56 / 1:58" (stale position vs zero-or-shorter duration). */
+  const isReady = durationMs > 0;
+  const safePosition = Math.min(positionMs, Math.max(durationMs, 0));
+  const percent = isReady ? Math.min(100, (safePosition / durationMs) * 100) : 0;
 
-  /* Click anywhere on the progress track to seek there. We can't use the
-   * native <input type=range> because we need a paper-style bar that
-   * matches the rest of the mailing-bar aesthetic — and Spotify's seek
-   * accepts seconds, not a 0-1 ratio, so we do the math ourselves. */
+  /* Click anywhere on the progress track to seek there. */
   const handleTrackClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (durationMs <= 0) return;
     const rect = event.currentTarget.getBoundingClientRect();
@@ -384,6 +397,10 @@ function MiniPlayer({
     const finalRatio = isRtl ? 1 - ratio : ratio;
     onSeek(((durationMs * finalRatio) / 1000));
   };
+
+  /* Speaker icon picks intensity based on level — same convention as macOS,
+   * Spotify desktop, etc. */
+  const VolumeIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
     <div className="mx-auto flex max-w-6xl items-center gap-3">
@@ -410,12 +427,14 @@ function MiniPlayer({
             </span>
             <span className="font-medium text-ink">{title}</span>
           </p>
-          <span className="hidden flex-shrink-0 font-mono text-[10px] tabular-nums text-ink-soft sm:inline">
-            {formatTime(positionMs)} / {formatTime(durationMs)}
-          </span>
+          {isReady && (
+            <span className="hidden flex-shrink-0 font-mono text-[10px] tabular-nums text-ink-soft sm:inline">
+              {formatTime(safePosition)} / {formatTime(durationMs)}
+            </span>
+          )}
         </div>
 
-        {/* Progress track — button so it's natively clickable + keyboard-friendly */}
+        {/* Progress track */}
         <button
           type="button"
           onClick={handleTrackClick}
@@ -428,6 +447,46 @@ function MiniPlayer({
             style={{ width: `${percent}%` }}
           />
         </button>
+      </div>
+
+      {/* Volume control. Spotify's IFrame API doesn't officially expose
+       *  setVolume on the embedded widget format we use — the slider may
+       *  or may not actually affect audio depending on which build of
+       *  Spotify's API is currently served. The setVolume call in
+       *  music-player-context tries multiple methods (controller method
+       *  + iframe postMessage) to maximise the chance one sticks.
+       *  Hidden on mobile to keep the bar compact. */}
+      <div
+        className="hidden flex-shrink-0 items-center gap-2 sm:flex"
+        style={{ direction: "ltr" }}
+      >
+        <button
+          type="button"
+          onClick={() => onVolumeChange(volume === 0 ? 1 : 0)}
+          aria-label={volume === 0 ? "ביטול השתקה" : "השתק"}
+          className="text-ink-soft transition-colors hover:text-blush-500 focus:outline-none focus-visible:text-blush-500"
+        >
+          <VolumeIcon className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={volume}
+          onChange={(e) => onVolumeChange(Number(e.target.value))}
+          aria-label="עוצמת קול"
+          className="h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-blush-100 accent-blush-500
+            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3
+            [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full
+            [&::-webkit-slider-thumb]:bg-blush-500 [&::-webkit-slider-thumb]:shadow-sm
+            [&::-webkit-slider-thumb]:transition-colors
+            [&::-webkit-slider-thumb]:hover:bg-blush-600
+            [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3
+            [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blush-500
+            [&::-moz-range-thumb]:border-0
+            [&::-moz-range-thumb]:shadow-sm"
+        />
       </div>
     </div>
   );

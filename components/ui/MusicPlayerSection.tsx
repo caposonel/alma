@@ -3,17 +3,37 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LyricScroll, type SyncedLine } from "@/components/motion/LyricScroll";
 import {
-  SpotifyEmbedWithLyrics,
-  type PlaybackState,
-  type SpotifyEmbedController,
-} from "./SpotifyEmbedWithLyrics";
+  YouTubeEmbedPlayer,
+  type YouTubePlaybackState,
+  type YouTubePlayerController,
+} from "./YouTubeEmbedPlayer";
 import { AlbumDiscography, type DiscographyAlbum } from "./AlbumDiscography";
 import { useMusicPlayer } from "@/lib/music-player-context";
 import type { AdminLyric } from "@/lib/admin-store";
+import { looksLikeLRC, parseLRC } from "@/lib/lrclib";
+
+/* Karaoke comes from the admin store ONLY.
+ *
+ * Previous behaviour: on every track change we'd hit /api/lyrics → LRCLIB,
+ * try 4 artist-name variants + a fuzzy /search, then maybe karaoke. That
+ * meant up to 5 HTTP round-trips per track click before any visual
+ * response — visitors saw the lyrics card flash empty during the lookup
+ * and the next-track click felt sluggish.
+ *
+ * New flow: a one-off `scripts/bake-lrclib.ts` script populates each
+ * track's `lyricsHe` in `data/content.json` with the LRC text. The runtime
+ * just reads `matched.lyricsHe`, detects LRC format via `looksLikeLRC`,
+ * parses it via `parseLRC`, and renders. Zero network calls.
+ *
+ * Tracks without LRC coverage (cleared by the bake script, or never
+ * timed) have empty `lyricsHe` → no karaoke card shows at all (cleaner
+ * UX than a static text block where karaoke is expected). */
 
 interface MusicPlayerSectionProps {
-  /** Initial Spotify URI to load (album/playlist/track). */
-  initialUri: string;
+  /** Initial YouTube video ID to load when the page first paints.
+   *  Resolved by `app/[locale]/(site)/music/page.tsx` from the first
+   *  track of the newest album. */
+  initialVideoId: string;
   /** All admin-stored lyrics, fetched server-side. Used to look up the
    * currently-playing track. */
   adminLyrics: AdminLyric[];
@@ -23,13 +43,11 @@ interface MusicPlayerSectionProps {
    * links. Clicking a track inside it drives the embed.
    */
   albums: DiscographyAlbum[];
-  /** Static-fallback title shown before any track has been played. */
+  /** Fallback title shown when no admin entry matches the playing track. */
   fallbackTitle: string;
-  /** Static-fallback lyric lines shown before any track has been played. */
-  fallbackLines: string[];
-  /** Static-fallback credit line ("מילים ולחן: עלמה גוב" etc.). */
+  /** Credit line shown under the lyric card ("מילים ולחן: עלמה גוב" etc.). */
   fallbackCredit?: string;
-  /** Spotify-embed loading-placeholder label. */
+  /** Embed loading-placeholder label. */
   spotifyLoadingLabel?: string;
   /** Lyrics section heading (rendered above the LyricScroll card). */
   lyricsHeading: React.ReactNode;
@@ -37,92 +55,57 @@ interface MusicPlayerSectionProps {
   embedClassName?: string;
   /** Container className for the lyrics card wrapper. */
   lyricsClassName?: string;
-  /** The artist name to query LRCLIB with. Defaults to "Alma Gov". */
-  artistName?: string;
   /** Discography section heading (e.g. "בחרי שיר"). */
   discographyHeading?: string;
   /** Short hint under the heading (e.g. "לחצי על שיר…"). */
   discographyHint?: string;
 }
 
-interface LyricsResponse {
-  synced: SyncedLine[] | null;
-  plain: string | null;
-  duration: number | null;
-}
-
 /**
  * Stitches the IFrame-API-driven Spotify embed together with the lyrics card.
  *
- * Layered lookup, in priority order:
- *   1. LRCLIB synced lyrics → karaoke-style highlighting of the active line
- *      driven by `playback_update` position events from the IFrame API.
- *   2. LRCLIB plain lyrics or admin-stored `lyricsHe`/`lyricsEn` → static
- *      display, no highlight.
- *   3. Static `fallback*` props → when nothing else is available (no track
- *      playing yet, or no admin/LRCLIB match).
- *
- * The admin lyric record's `titleHe`/`titleEn` field is what we query LRCLIB
- * with. Alma's workflow: create a Lyric in admin with `titleHe` +
- * `spotifyTrackId` filled in and (optionally) lyric text. When a visitor
- * plays that track in the embed, the matching admin row is found by
- * Spotify track ID; LRCLIB is queried with the title to pull synced timing
- * data; lyrics then highlight in real time.
+ * Karaoke source: the admin store's `lyricsHe` field, expected to be LRC
+ * text (with `[mm:ss.xx]` line prefixes). Populate via
+ * `scripts/bake-lrclib.ts` for tracks LRCLIB has timing for, or paste
+ * LRC manually in the admin form. Tracks with plain-text or empty
+ * lyrics show the embed + discography but no lyrics card.
  */
 export function MusicPlayerSection({
-  initialUri,
+  initialVideoId,
   adminLyrics,
   albums,
   fallbackTitle,
-  fallbackLines,
   fallbackCredit,
   spotifyLoadingLabel,
   lyricsHeading,
   embedClassName,
   lyricsClassName,
-  artistName = "Alma Gov",
   discographyHeading,
   discographyHint,
 }: MusicPlayerSectionProps) {
-  /* The first track of the newest album is the "default" that drives the
-   * lyrics card on first paint — so visitors landing on /music see real
-   * lyrics immediately instead of a "click a song" placeholder. Computed
-   * from the same `albums` array the discography renders. */
+  /* The first track of the newest album with a YouTube ID is the
+   * "default" that drives the player on first paint. We track the
+   * current track by its YouTube videoId now (was Spotify trackId). */
   const defaultTrack = useMemo<AdminLyric | null>(() => {
-    return albums[0]?.tracks[0] ?? null;
+    for (const album of albums) {
+      const playable = album.tracks.find((t) => !!t.youtubeId);
+      if (playable) return playable;
+    }
+    return null;
   }, [albums]);
-  const defaultTrackId = defaultTrack?.spotifyTrackId ?? null;
+  const defaultVideoId = defaultTrack?.youtubeId ?? null;
 
-  const [currentTrackId, setCurrentTrackId] = useState<string | null>(
-    defaultTrackId
+  const [currentVideoId, setCurrentVideoId] = useState<string | null>(
+    defaultVideoId
   );
   const [currentPositionMs, setCurrentPositionMs] = useState<number>(0);
-  /**
-   * Total duration of the currently-loaded track, in ms. Used by LyricScroll
-   * to ESTIMATE the active plain (non-synced) lyric line via `position/duration`
-   * — gives the karaoke-style "past lines slide away" effect even when LRCLIB
-   * has no LRC timing data for the track.
-   */
+  /** Total duration of the currently-loaded track, in ms. Passed through
+   *  to LyricScroll mainly for the mini-player progress bar wiring. */
   const [currentDurationMs, setCurrentDurationMs] = useState<number>(0);
-  const [syncedLines, setSyncedLines] = useState<SyncedLine[] | null>(null);
-  const [lrclibPlain, setLrclibPlain] = useState<string | null>(null);
-  /**
-   * Tracks whether the LRCLIB lookup for `currentTrackId` is still in flight.
-   * Starts true on initial mount (so SSR doesn't flash "lyrics coming soon"
-   * before we've even tried to fetch). Flips false once the fetch resolves
-   * (success or failure). Drives whether the "coming soon" placeholder is
-   * rendered — we keep it hidden during the fetch window so the user doesn't
-   * see a false-negative message that immediately gets replaced.
-   */
-  const [lyricsFetching, setLyricsFetching] = useState<boolean>(
-    !!defaultTrackId
-  );
 
-  /* Imperative handle to the Spotify embed's controller. Stashed from the
-   * embed's `onControllerReady` callback so the discography can drive
-   * playback directly (loadUri + play), bypassing the unreliable
-   * `playback_update.uri` detection path. */
-  const spotifyControllerRef = useRef<SpotifyEmbedController | null>(null);
+  /* Imperative handle to the YouTube IFrame player's controller. Used by
+   * the discography to drive playback (loadUri = loadVideoById + play). */
+  const ytControllerRef = useRef<YouTubePlayerController | null>(null);
 
   /* Global music-player context — lets the sticky MailingBar at the bottom
    * of every page show a mini-player (pause/resume + progress) wired to the
@@ -141,25 +124,22 @@ export function MusicPlayerSection({
     playerRef.current = player;
   }, [player]);
 
-  // Locate the matching admin-lyric row, if any.
-  const matched = currentTrackId
-    ? adminLyrics.find((l) => l.spotifyTrackId === currentTrackId) ?? null
+  // Locate the matching admin-lyric row by YouTube videoId.
+  const matched = currentVideoId
+    ? adminLyrics.find((l) => l.youtubeId === currentVideoId) ?? null
     : null;
 
   /* Push the current track title up to the global player whenever the
-   * matched lyric row changes, so the MailingBar mini-player can show
-   * "now playing: שיר ורוד" while a track is active. We deliberately read
-   * `playerRef.current` instead of including `player` in deps — see the
-   * note above the ref declaration. */
+   * matched lyric row changes. */
   useEffect(() => {
     const p = playerRef.current;
     if (!p) return;
-    if (!matched || !currentTrackId) {
+    if (!matched || !currentVideoId) {
       p.setCurrentTrack(null);
       return;
     }
-    p.setCurrentTrack({ id: currentTrackId, title: matched.titleHe });
-  }, [matched, currentTrackId]);
+    p.setCurrentTrack({ id: currentVideoId, title: matched.titleHe });
+  }, [matched, currentVideoId]);
 
   /* Clear out player context state when this section unmounts (route nav
    * away from /music). The Spotify embed inside us gets destroyed with the
@@ -175,105 +155,29 @@ export function MusicPlayerSection({
     };
   }, []);
 
-  /* User picked a track in the TrackPicker. Switch the embed to that track
-   * and update our local state at the SAME time — we don't wait for Spotify
-   * to confirm the URI change, because the playback_update event sometimes
-   * never reports the new URI (album/playlist embeds especially). */
+  /* User picked a track in the discography. Switch the YouTube embed
+   * to that track's video and update local state. */
   const handleSelectTrack = useCallback((track: AdminLyric) => {
-    if (!track.spotifyTrackId) return;
-    const uri = `spotify:track:${track.spotifyTrackId}`;
-    const controller = spotifyControllerRef.current;
+    if (!track.youtubeId) return;
+    const controller = ytControllerRef.current;
     if (controller) {
       try {
-        controller.loadUri(uri);
-        controller.play();
+        controller.loadUri(track.youtubeId);
       } catch (err) {
-        // The controller can throw if it's been destroyed mid-call (race
-        // with route navigation). State still updates so the lyrics swap.
-        console.warn("Spotify controller call failed:", err);
+        console.warn("YouTube controller call failed:", err);
       }
     }
-    // Drive the lyrics card locally — independent of any Spotify event.
-    setCurrentTrackId(track.spotifyTrackId);
-    // Reset position/duration so the karaoke teleprompter doesn't get stuck
-    // showing a stale line from the previous track until Spotify reports
-    // new playback state.
+    setCurrentVideoId(track.youtubeId);
     setCurrentPositionMs(0);
     setCurrentDurationMs(0);
+    // Reset global mini-player state so the MailingBar doesn't show
+    // stale position/duration during the brief gap before YT reports.
+    playerRef.current?.updatePlaybackState({
+      positionMs: 0,
+      durationMs: 0,
+      isPaused: false,
+    });
   }, []);
-
-  /* When the current track changes, hit our LRCLIB proxy to pull synced
-   * lyrics. Flips `lyricsFetching` true at the start and false when the
-   * request settles (success OR failure) so the render can suppress the
-   * "coming soon" placeholder during the in-flight window.
-   *
-   * No `lastFetchedTrackIdRef` dedup: an earlier version had one and it
-   * created a strict-mode trap — in dev, React mounts → unmounts → mounts
-   * each effect. The first mount started a fetch with `cancelled = false`,
-   * the unmount set `cancelled = true`, and the re-mount early-returned on
-   * the ref check (same trackId). The original IIFE then resolved with
-   * `cancelled` true, skipped its `finally` `setLyricsFetching(false)`, and
-   * `lyricsFetching` was stuck true forever — so every track's lyric body
-   * just rendered the empty " " placeholder regardless of admin or LRCLIB
-   * data. Removing the ref means strict mode does an extra fetch in dev
-   * (no big deal — Next caches it for 24h), and lyrics always update. */
-  useEffect(() => {
-    if (!currentTrackId || !matched) {
-      setSyncedLines(null);
-      setLrclibPlain(null);
-      setLyricsFetching(false);
-      return;
-    }
-    setLyricsFetching(true);
-
-    /* LRCLIB query title: Alma's catalog is released in Hebrew with Hebrew
-     * song names — LRCLIB indexes them under those names. The previous
-     * `matched.titleEn` fallback was a transliteration meant for UI display
-     * in the now-removed English locale; we just use the Hebrew title. */
-    const queryTitle = matched.titleHe || "";
-    if (!queryTitle) {
-      setSyncedLines(null);
-      setLrclibPlain(null);
-      setLyricsFetching(false);
-      return;
-    }
-
-    let cancelled = false;
-    void (async () => {
-      try {
-        const params = new URLSearchParams({
-          track: queryTitle,
-          artist: artistName,
-        });
-        const res = await fetch(`/api/lyrics?${params.toString()}`);
-        if (cancelled) return;
-        if (!res.ok) {
-          setSyncedLines(null);
-          setLrclibPlain(null);
-          return;
-        }
-        const data = (await res.json()) as LyricsResponse;
-        if (cancelled) return;
-        setSyncedLines(data.synced && data.synced.length > 0 ? data.synced : null);
-        setLrclibPlain(data.plain);
-      } catch {
-        if (cancelled) return;
-        setSyncedLines(null);
-        setLrclibPlain(null);
-      } finally {
-        /* ALWAYS flip the fetching flag false, even if `cancelled`. The
-         * previous version gated this behind `!cancelled` which caused the
-         * strict-mode bug described in the effect header — a cancelled
-         * fetch would leave the loading state stuck on. The next mount
-         * sets it back to true at the top, so we don't race. */
-        setLyricsFetching(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currentTrackId, matched, artistName]);
 
   /* Throttle position updates to ~16x/sec (60ms). The IFrame API itself
    * emits at roughly 100-150ms intervals, so 60ms is faster than the
@@ -289,7 +193,7 @@ export function MusicPlayerSection({
    * up top) so the MailingBar's mini-player progress bar advances in
    * lockstep with the embed. */
   const lastPositionWriteRef = useRef(0);
-  function handlePlaybackUpdate(state: PlaybackState) {
+  function handlePlaybackUpdate(state: YouTubePlaybackState) {
     const now = performance.now();
     if (now - lastPositionWriteRef.current < 60) return;
     lastPositionWriteRef.current = now;
@@ -307,64 +211,55 @@ export function MusicPlayerSection({
 
   /* ----- Decide what to render in the LyricScroll ----- */
 
-  // Title: admin's title > fallback static title.
   const title = matched ? matched.titleHe : fallbackTitle;
 
-  // Sync layer: LRCLIB synced > nothing.
-  const useSynced = syncedLines && syncedLines.length > 0;
+  // The admin store's `lyricsHe` may contain LRC-formatted text (baked in
+  // by `scripts/bake-lrclib.ts`, or pasted manually) or plain text or be
+  // empty. We auto-detect LRC via `looksLikeLRC` and parse on the fly.
+  // Empty / plain text → no karaoke card.
+  const adminText = matched ? matched.lyricsHe || null : null;
+  const adminIsLRC = adminText ? looksLikeLRC(adminText) : false;
+  const adminSyncedLines = useMemo<SyncedLine[] | null>(() => {
+    if (!adminText || !adminIsLRC) return null;
+    const parsed = parseLRC(adminText);
+    return parsed.length > 0 ? parsed : null;
+  }, [adminText, adminIsLRC]);
 
-  // Plain-line fallback when no synced version exists. Priority:
-  //   1. Admin-stored lyrics text (matches the displayed title's locale)
-  //   2. LRCLIB plain lyrics
-  //   3. Per-track "lyrics coming soon" message (when we KNOW which track is
-  //      playing but have no text for it — better than showing the static
-  //      placeholder lyrics for a different song)
-  //   4. Static fallback lines from page props (used pre-playback)
-  const adminText = matched
-    ? matched.lyricsHe || null /* treat empty string as missing */
-    : null;
-  const plainSource = adminText ?? lrclibPlain ?? null;
-
-  // Per-track "coming soon" placeholder — shown only once the LRCLIB fetch
-  // has resolved (success or failure). During the in-flight window we show
-  // an empty line instead, so visitors don't get a flash of "lyrics coming
-  // soon" that immediately gets replaced when admin or LRCLIB data arrives.
-  const comingSoonLines = matched
-    ? ["המילים לשיר הזה יעלו בקרוב."]
-    : fallbackLines;
-  const placeholderLines = lyricsFetching ? [" "] : comingSoonLines;
-  const plainLines = plainSource ? plainSource.split("\n") : placeholderLines;
-
+  const useSynced = adminSyncedLines !== null;
   const credit = fallbackCredit;
 
   return (
     <>
-      <SpotifyEmbedWithLyrics
-        initialUri={initialUri}
-        onTrackChange={setCurrentTrackId}
+      <YouTubeEmbedPlayer
+        initialVideoId={initialVideoId}
         onPlaybackUpdate={handlePlaybackUpdate}
         onControllerReady={(controller) => {
-          spotifyControllerRef.current = controller;
-          // Hand the controller to the global music-player context so the
-          // sticky MailingBar's mini-player can call play/pause/seek.
+          ytControllerRef.current = controller;
+          // Hand the YT controller to the global music-player context
+          // so the MailingBar mini-player's play/pause/seek/volume
+          // buttons can drive it.
           playerRef.current?.setController(controller);
         }}
         className={embedClassName}
         loadingLabel={spotifyLoadingLabel}
       />
 
-      <div className={lyricsClassName}>
-        {lyricsHeading}
-        <LyricScroll
-          title={title}
-          credit={credit}
-          currentTimeMs={currentPositionMs}
-          durationMs={currentDurationMs}
-          {...(useSynced
-            ? { syncedLines: syncedLines! }
-            : { lines: plainLines })}
-        />
-      </div>
+      {/* Lyrics card — ONLY rendered when the admin store has LRC-format
+          timing data for the current track. Tracks with plain-text or
+          empty lyrics don't show the card at all: visitors aren't shown
+          a static block of text where karaoke is expected. */}
+      {useSynced && (
+        <div className={lyricsClassName}>
+          {lyricsHeading}
+          <LyricScroll
+            title={title}
+            credit={credit}
+            currentTimeMs={currentPositionMs}
+            durationMs={currentDurationMs}
+            syncedLines={adminSyncedLines!}
+          />
+        </div>
+      )}
 
       {/* Album discography — cover art + clickable tracks per release.
           Clicking a track drives both the embed AND the lyrics card.
@@ -374,7 +269,7 @@ export function MusicPlayerSection({
       <div className="mt-16">
         <AlbumDiscography
           albums={albums}
-          currentTrackId={currentTrackId}
+          currentTrackId={currentVideoId}
           onSelectTrack={handleSelectTrack}
           heading={discographyHeading}
           hint={discographyHint}
