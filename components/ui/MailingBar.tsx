@@ -427,9 +427,16 @@ function MiniPlayer({
             </span>
             <span className="font-medium text-ink">{title}</span>
           </p>
-          {isReady && (
+          {/* Show the timer ONLY when we have:
+              1) a valid positive duration AND
+              2) a position that's actually within that duration.
+              If position > duration (track-switch race where the player
+              briefly reports stale position alongside fresh duration),
+              we hide the timer entirely until the next poll tick fixes
+              it — much cleaner than showing nonsense like "3:56 / 1:59". */}
+          {durationMs > 0 && positionMs >= 0 && positionMs <= durationMs && (
             <span className="hidden flex-shrink-0 font-mono text-[10px] tabular-nums text-ink-soft sm:inline">
-              {formatTime(safePosition)} / {formatTime(durationMs)}
+              {formatTime(positionMs)} / {formatTime(durationMs)}
             </span>
           )}
         </div>
