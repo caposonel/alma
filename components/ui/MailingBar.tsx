@@ -427,16 +427,29 @@ function MiniPlayer({
             </span>
             <span className="font-medium text-ink">{title}</span>
           </p>
-          {/* Show the timer ONLY when we have:
-              1) a valid positive duration AND
-              2) a position that's actually within that duration.
-              If position > duration (track-switch race where the player
-              briefly reports stale position alongside fresh duration),
-              we hide the timer entirely until the next poll tick fixes
-              it — much cleaner than showing nonsense like "3:56 / 1:59". */}
-          {durationMs > 0 && positionMs >= 0 && positionMs <= durationMs && (
-            <span className="hidden flex-shrink-0 font-mono text-[10px] tabular-nums text-ink-soft sm:inline">
-              {formatTime(positionMs)} / {formatTime(durationMs)}
+          {/* Show the timer ONLY when we have a valid positive duration.
+              Both values are clamped: position floors to 0 and caps at
+              duration. The `data-debug-*` attributes expose the raw
+              values for DOM inspection — if the display ever looks
+              wrong, right-click the timer, "Inspect", and check the
+              attributes to see what positionMs/durationMs are actually
+              being passed in. */}
+          {durationMs > 0 && (
+            <span
+              /* `dir="ltr"` is REQUIRED. The site is Hebrew (RTL), so
+               * without forcing LTR on this span the segments "0:38",
+               * " / ", "3:16" flow right-to-left → visually reads
+               * "3:16 / 0:38" even though the source order is
+               * current/total. This was the actual root cause of every
+               * "timer values look swapped" complaint — the math
+               * upstream was correct all along, just the visual order
+               * was getting flipped by the parent's `dir="rtl"`. */
+              dir="ltr"
+              className="hidden flex-shrink-0 font-mono text-[10px] tabular-nums text-ink-soft sm:inline"
+              data-debug-position-ms={positionMs}
+              data-debug-duration-ms={durationMs}
+            >
+              {formatTime(Math.max(0, Math.min(positionMs, durationMs)))} / {formatTime(durationMs)}
             </span>
           )}
         </div>

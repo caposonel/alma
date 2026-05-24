@@ -186,10 +186,26 @@ export function YouTubeEmbedPlayer({
       const positionSec = p.getCurrentTime();
       const durationSec = p.getDuration();
       const state = p.getPlayerState();
+      /* YT.PlayerState codes:
+       *   -1 UNSTARTED  → return position 0 (the player exists but hasn't loaded yet)
+       *    0 ENDED      → return position 0 (don't leave the mini-player stuck at
+       *                   the song's max duration after it ends naturally)
+       *    1 PLAYING    → real current time
+       *    2 PAUSED     → real current time (paused position is still valid)
+       *    3 BUFFERING  → real current time
+       *    5 VIDEO_CUED → return position 0 (new video loaded, not started)
+       *
+       * The "stuck at max" bug was YT's getCurrentTime() returning the duration
+       * value once the song ended OR after a track switch where the previous
+       * track had played to completion. Clamping ENDED/UNSTARTED/CUED back to 0
+       * forces the mini-player timer to reset cleanly. */
+      const reportedPositionMs =
+        state === 0 || state === -1 || state === 5
+          ? 0
+          : positionSec * 1000;
       onPlaybackUpdateRef.current?.({
-        position: positionSec * 1000,
+        position: reportedPositionMs,
         duration: durationSec * 1000,
-        // YT.PlayerState.PAUSED = 2, ENDED = 0, BUFFERING = 3, UNSTARTED = -1
         // Anything other than PLAYING (1) is "not actively playing".
         isPaused: state !== 1,
       });
