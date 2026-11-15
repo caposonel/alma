@@ -19,7 +19,11 @@ export default async function SiteLayout({
   // as props. Keeps the Header a client component (it needs scroll/state)
   // while making the store URL admin-editable without a per-render KV read
   // inside the client bundle.
-  const settings = await getSettingsAdmin();
+  // A KV outage must not take down every public page — fall back to defaults.
+  const settings = await getSettingsAdmin().catch((err) => {
+    console.error("[site layout] settings read failed:", err);
+    return null;
+  });
   const storeUrl = settings?.storeUrl ?? SOCIAL_LINKS.bandcamp;
 
   /* Determine whether the visitor is an authenticated admin. The
