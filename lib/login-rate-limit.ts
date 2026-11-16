@@ -1,4 +1,5 @@
 import "server-only";
+import { kvConfig } from "@/lib/kv-env";
 
 // Imported lazily: auth.ts is also loaded by the proxy (middleware), which
 // shouldn't pull in the storage module unless a login actually happens.
@@ -29,7 +30,7 @@ export function clientIp(request: Request | undefined): string {
 }
 
 export async function isLoginBlocked(ip: string): Promise<boolean> {
-  if (process.env.KV_REST_API_URL) {
+  if (kvConfig) {
     try {
       const kv = await getKvClient();
       const count = (await kv.get<number>(key(ip))) ?? 0;
@@ -44,7 +45,7 @@ export async function isLoginBlocked(ip: string): Promise<boolean> {
 }
 
 export async function recordLoginFailure(ip: string): Promise<void> {
-  if (process.env.KV_REST_API_URL) {
+  if (kvConfig) {
     try {
       const kv = await getKvClient();
       const count = await kv.incr(key(ip));

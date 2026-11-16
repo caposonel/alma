@@ -1,13 +1,14 @@
 import "server-only";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { kvConfig } from "@/lib/kv-env";
 
 /**
  * Storage layer for the custom admin panel.
  *
- * - In production (Vercel) we use Vercel KV via `@vercel/kv`. Detection key is
- *   `process.env.KV_REST_API_URL` — when set we assume the full set of KV env
- *   vars is present.
+ * - In production (Vercel) we use Vercel KV via `@vercel/kv`, configured from
+ *   the env vars resolved in `lib/kv-env.ts` (prefixed `ALMA_KV_*` or plain
+ *   `KV_*`).
  * - For local dev (no KV env vars) we fall back to a JSON file at
  *   `data/content.json`. The directory is created on first write.
  *
@@ -74,8 +75,8 @@ export async function getKvClient(): Promise<KvClient> {
   if (kvClient) return kvClient;
   const { createClient } = await import("@vercel/kv");
   kvClient = createClient({
-    url: process.env.KV_REST_API_URL!,
-    token: process.env.KV_REST_API_TOKEN!,
+    url: kvConfig!.url,
+    token: kvConfig!.token,
     retry: { retries: 1, backoff: () => 100 },
     signal: () => AbortSignal.timeout(3000),
   });
@@ -117,7 +118,7 @@ async function getVercelKvStore(): Promise<ListStore> {
 }
 
 export async function getStore(): Promise<ListStore> {
-  if (process.env.KV_REST_API_URL) {
+  if (kvConfig) {
     return await getVercelKvStore();
   }
   return new FileStore();

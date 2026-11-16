@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getKvClient } from "@/lib/admin-store";
+import { kvConfig } from "@/lib/kv-env";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +14,7 @@ export const dynamic = "force-dynamic";
  * hostnames, tokens or content — only counts and an error code.
  */
 export async function GET() {
-  const configured = Boolean(
-    process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN
-  );
+  const configured = kvConfig !== null;
   if (!configured) {
     return NextResponse.json(
       { kv: { configured: false, reachable: false } },
