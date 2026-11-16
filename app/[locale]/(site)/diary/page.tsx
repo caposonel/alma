@@ -46,116 +46,15 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export const STATIC_DIARY_ENTRIES: DiaryEntry[] = [
-  {
-    _id: "d1",
-    title: "מכתב אחרי ברבי",
-    slug: { current: "after-barby" },
-    date: "2024-08-20",
-    excerpt:
-      "ירדתי מהבמה רועדת. כל מילה ששרתי הקהל החזיר לי. רגע אחד עצרתי באמצע שיר כי שמעתי את הקול שלהם חזק יותר משלי — ופתאום הבנתי שזה כבר לא רק שלי.",
-    featured: true,
-    staticImage: {
-      src: "/images/gallery-live-crowd.jpg",
-      alt: "עלמה על הבמה בברבי, הקהל שר את המילים",
-    },
-  },
-  {
-    _id: "d2",
-    title: "בסיבוב, על הפרידה",
-    slug: { current: "bsibub-breakup" },
-    date: "2026-02-10",
-    excerpt:
-      "חשבתי שאם רק אעבור לעיר אחרת — הזיכרונות יישארו שם. לא ידעתי שהם נוסעים איתי ברכבת, נכנסים איתי לדירה חדשה, יושבים על שולחן הסלון כאילו זה הבית שלהם. כתבתי את 'בסיבוב' בלילה כזה.",
-    staticImage: {
-      src: "/images/gallery-notebook.jpg",
-      alt: "מחברת מילים פתוחה על שולחן",
-    },
-  },
-  {
-    _id: "d3",
-    title: "המחברת לא תיגמר",
-    slug: { current: "notebook-promise" },
-    date: "2025-11-04",
-    excerpt:
-      "אנשים שואלים אותי איך אני יודעת ששיר טוב. התשובה היחידה שלי: אם הוא נשאר איתי גם בבוקר אחרי. אם כתבתי אותו בערב והוא עדיין רץ אצלי בראש כשאני עושה קפה — אז משהו שם אמיתי.",
-    staticImage: {
-      src: "/images/gallery-couch.jpg",
-      alt: "עלמה מתבוננת לחלון בבית",
-    },
-  },
-  {
-    _id: "d4",
-    title: "ביכורים, געגוע שלא נגמר",
-    slug: { current: "bikurim-longings" },
-    date: "2024-10-07",
-    excerpt:
-      "השנה הזו, יותר מתמיד, אני חוזרת לכפר הנוער ביכורים בראש. הבית הראשון שבחרתי לעצמי. שם למדתי לאהוב, שם למדתי לכתוב. עכשיו אני שולחת ממנו רק מילים — ומקווה שיגיעו לאן שהוא צריך להגיע.",
-    staticImage: {
-      src: "/images/alma-portrait-vintage.jpg",
-      alt: "פורטרט שקט בחדר עם פוסטר הביטלס",
-    },
-  },
-  {
-    _id: "d5",
-    title: "סבתא, אמא, הביטלס",
-    slug: { current: "beatles-inheritance" },
-    date: "2025-06-15",
-    excerpt:
-      "אמא שלי שמה לנו Blackbird לפני שעוד ידעתי לקרוא. סבא שלי הכניס את הביטלס למשפחה והם פשוט נשארו. עד היום, כשאני מחפשת איך לסיים שיר — אני סוגרת עיניים ושומעת את ההרמוניות שלהם בראש.",
-    staticImage: {
-      src: "/images/alma-portrait-blue.jpg",
-      alt: "פורטרט במגוון תכלת",
-    },
-  },
-  {
-    _id: "d6",
-    title: "סריגה בין שירים",
-    slug: { current: "crochet-meditation" },
-    date: "2025-04-22",
-    excerpt:
-      "כשהמילים לא באות אני סורגת. זה הדבר הכי מדיטטיבי שיצא לי. הידיים עסוקות, הראש משוחרר, ואז — בדרך כלל איפה שהוא בין השורות — מגיע משפט שאני רצה לרשום אותו לפני שיברח.",
-    staticImage: {
-      src: "/images/gallery-embroidery.jpg",
-      alt: "ידיים סורגות בחדר אור",
-    },
-  },
-  {
-    _id: "d7",
-    title: "ערב לפני הופעה",
-    slug: { current: "night-before-show"  },
-    date: "2025-08-08",
-    excerpt:
-      "תמיד יש את החצי שעה הזו לפני שעולים. כולם מסביב עסוקים, ואני יושבת לבד בחדר ההלבשה, מסתכלת על הראי, וחושבת — איך זה שהשיר שכתבתי במחברת בלילה אחד יהיה עוד מעט בפיות של אנשים שאני לא מכירה.",
-    staticImage: {
-      src: "/images/gallery-backstage-mirror.jpg",
-      alt: "ראי חדר הלבשה לפני הופעה",
-    },
-  },
-  {
-    _id: "d8",
-    title: "תל אביב, זרה ומוזרה",
-    slug: { current: "tel-aviv-stranger" },
-    date: "2025-09-12",
-    excerpt:
-      "עברתי לעיר כי הרגשתי שזה הצעד הבא. אבל יש לי בוקרים שאני מתעוררת ולא מבינה איך הגעתי לפה. תל אביב לא לגמרי בשבילי, ועדיין — באמצע הרעש, איפה שהוא בין הצופרים והאוטובוסים, מצאתי שירים חדשים.",
-    staticImage: {
-      src: "/images/gallery-motion-blur.jpg",
-      alt: "תנועה מטושטשת ברחוב בעיר",
-    },
-  },
-];
-
 export default async function DiaryPage() {
   const [entries, settings] = await Promise.all([
     getAllDiaryEntries({ limit: 24 }).catch(() => []),
     getSettingsAdmin().catch(() => null),
   ]);
+  // Only real entries are shown. The built-in placeholder letters (written
+  // in Alma's voice, not hers) were removed; with no entries the page says
+  // the first letters are on their way.
   const hasEntries = entries.length > 0;
-  // Placeholder entries are listed newest first, like real ones.
-  const displayEntries = hasEntries
-    ? entries
-    : [...STATIC_DIARY_ENTRIES].sort((a, b) => b.date.localeCompare(a.date));
   const t = await getTranslations("diary");
 
   const diaryTitle = readContentOverride(settings, "page.diary.title", t("title"));
@@ -243,13 +142,19 @@ export default async function DiaryPage() {
             <Heart className="absolute -start-5 bottom-16 h-4 w-4 opacity-15 hidden lg:block" />
           </FloatingDoodle>
 
-          <StaggerGrid className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.1}>
-            {displayEntries.map((entry) => (
-              <StaggerItem key={entry._id} className="h-full">
-                <DiaryCard entry={entry} isPlaceholder={!hasEntries} />
-              </StaggerItem>
-            ))}
-          </StaggerGrid>
+          {hasEntries ? (
+            <StaggerGrid className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.1}>
+              {entries.map((entry) => (
+                <StaggerItem key={entry._id} className="h-full">
+                  <DiaryCard entry={entry} />
+                </StaggerItem>
+              ))}
+            </StaggerGrid>
+          ) : (
+            <p className="py-16 text-center font-display text-2xl text-ink-soft md:text-3xl">
+              {t("empty")}
+            </p>
+          )}
         </NotebookLines>
 
       </div>

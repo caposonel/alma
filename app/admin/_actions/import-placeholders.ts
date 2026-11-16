@@ -4,8 +4,6 @@ import { revalidatePath } from "next/cache";
 import { revalidatePublicSite } from "@/lib/revalidate";
 import { auth } from "@/auth";
 import {
-  getDiaryEntries,
-  setDiaryEntries,
   getUpcomingShowsAdmin,
   getPastShowsAdmin,
   setPastShowsAdmin,
@@ -13,7 +11,6 @@ import {
   setPhotosAdmin,
   getAbout,
   setAbout,
-  type AdminDiaryEntry,
   type AdminShow,
   type AdminPhoto,
   type AdminAbout,
@@ -24,7 +21,6 @@ import {
 // — this action just READS them via TypeScript import + reshapes them
 // into the admin schema, then writes them to the admin store.
 // Nothing is duplicated; the constants stay where they are.
-import { STATIC_DIARY_ENTRIES } from "@/app/[locale]/(site)/diary/page";
 import { STATIC_PAST } from "@/app/[locale]/(site)/shows/page";
 import { STATIC_PHOTOS } from "@/app/[locale]/(site)/gallery/page";
 import {
@@ -36,7 +32,7 @@ import {
 /**
  * Bulk-import the hard-coded placeholder data into the admin store.
  *
- * Each section (`diary` / `shows` / `photos` / `about`) is independent —
+ * Each section (`shows` / `photos` / `about`) is independent —
  * importing one doesn't touch the others. Each action is conservative:
  * if the admin store ALREADY has data for that section it returns an
  * error string rather than clobbering. The admin can clear via the
@@ -67,48 +63,6 @@ export interface ImportResult {
   imported?: number;
   /** Human-readable error or skip message — surfaced in the admin UI as-is. */
   message?: string;
-}
-
-/* ---------------------------------------------------------------------- */
-/*  Diary                                                                 */
-/* ---------------------------------------------------------------------- */
-
-export async function importDiaryPlaceholders(): Promise<ImportResult> {
-  await requireAdmin();
-  const existing = await getDiaryEntries();
-  if (existing.length > 0) {
-    return {
-      ok: false,
-      message: `Diary already has ${existing.length} entr${existing.length === 1 ? "y" : "ies"} — clear them first if you want a fresh import.`,
-    };
-  }
-
-  const now = new Date().toISOString();
-  const entries: AdminDiaryEntry[] = STATIC_DIARY_ENTRIES.map((s) => ({
-    id: s._id,
-    title: s.title,
-    slug: s.slug.current,
-    date: s.date,
-    // The static fallback only has an `excerpt` — no full body. We seed an
-    // empty body so admins can fill the full post via the inline body
-    // editor on the public detail page later.
-    excerpt: s.excerpt ?? "",
-    body: "",
-    // Static fallback's image is a local /images/... path. Admin's
-    // `coverImage` accepts a URL string, so the path works as-is — the
-    // public render still finds the file under /public/images.
-    coverImage: s.staticImage?.src,
-    featured: s.featured ?? false,
-    publishedAt: now,
-  }));
-
-  await setDiaryEntries(entries);
-  revalidatePath("/admin/diary");
-  revalidatePublicSite();
-  for (const e of entries) {
-    revalidatePublicSite();
-  }
-  return { ok: true, imported: entries.length };
 }
 
 /* ---------------------------------------------------------------------- */
