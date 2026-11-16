@@ -4,6 +4,10 @@ import { kvConfig } from "@/lib/kv-env";
 
 export const dynamic = "force-dynamic";
 
+// Cached briefly at the edge: still fresh enough for diagnosis, but a flood
+// of requests can't turn into a flood of database commands.
+const HEALTH_CACHE = "public, s-maxage=30, stale-while-revalidate=30";
+
 /**
  * Public health check for the content database (Vercel KV / Upstash Redis).
  *
@@ -18,7 +22,7 @@ export async function GET() {
   if (!configured) {
     return NextResponse.json(
       { kv: { configured: false, reachable: false } },
-      { headers: { "Cache-Control": "no-store" } }
+      { headers: { "Cache-Control": HEALTH_CACHE } }
     );
   }
 
@@ -43,7 +47,7 @@ export async function GET() {
           hasSettings: settings === 1,
         },
       },
-      { headers: { "Cache-Control": "no-store" } }
+      { headers: { "Cache-Control": HEALTH_CACHE } }
     );
   } catch (err) {
     const e = err as { name?: string; code?: string; cause?: { code?: string } };
@@ -64,7 +68,7 @@ export async function GET() {
           error: code,
         },
       },
-      { status: 503, headers: { "Cache-Control": "no-store" } }
+      { status: 503, headers: { "Cache-Control": HEALTH_CACHE } }
     );
   }
 }
