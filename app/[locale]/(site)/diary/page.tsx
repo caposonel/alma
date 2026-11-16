@@ -15,12 +15,17 @@ import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  // While the diary has no entries the page is just an empty-state message:
+  // keep it out of search results until the first letter is published.
+  const hasEntries =
+    (await getAllDiaryEntries({ limit: 1 }).catch(() => [])).length > 0;
   const title = "יומן / מכתבים — עלמה גוב";
   const description = "מחשבות, זיכרונות, שירים, וסיפורים קטנים מהיומן של עלמה.";
   return {
     title: { absolute: title },
     description,
+    ...(hasEntries ? {} : { robots: { index: false, follow: true } }),
     openGraph: {
       title,
       description,
