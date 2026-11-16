@@ -36,9 +36,14 @@ interface HeaderProps {
    * value (with a Bandcamp fallback applied by the caller).
    */
   storeUrl: string;
+  /**
+   * Whether the diary has published entries. The "Diary" nav item is hidden
+   * until it does, so the menu doesn't lead to an empty page.
+   */
+  showDiary?: boolean;
 }
 
-export function Header({ storeUrl }: HeaderProps) {
+export function Header({ storeUrl, showDiary = true }: HeaderProps) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -48,7 +53,7 @@ export function Header({ storeUrl }: HeaderProps) {
   const wasOpenRef = useRef(false);
 
   const navLinks: NavLink[] = [
-    ...baseNavLinks,
+    ...baseNavLinks.filter((l) => showDiary || l.labelKey !== "diary"),
     { href: storeUrl, labelKey: "store", external: true },
     contactNavLink,
   ];

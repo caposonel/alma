@@ -8,6 +8,7 @@ import { EditorSidebar } from "@/components/admin/EditorSidebar";
 import { ClientExtras } from "./_ClientExtras";
 import { getSettingsAdmin } from "@/lib/admin-store";
 import { SOCIAL_LINKS } from "@/lib/config";
+import { getAllDiaryEntries } from "@/lib/content";
 
 export default async function SiteLayout({
   children,
@@ -25,6 +26,10 @@ export default async function SiteLayout({
   });
   const storeUrl = settings?.storeUrl ?? SOCIAL_LINKS.bandcamp;
 
+  // Show the "Diary" menu item only once the diary has real entries.
+  const hasDiary =
+    (await getAllDiaryEntries({ limit: 1 }).catch(() => [])).length > 0;
+
   /* No server-side session check here: reading cookies would make every
    * public page dynamic (uncacheable). The inline-editing UI only activates
    * inside the `/admin/edit` preview iframe, and AdminModeProvider checks
@@ -33,7 +38,7 @@ export default async function SiteLayout({
     <AdminModeProvider>
       <MusicPlayerProvider>
         <ScrollProgress />
-        <Header storeUrl={storeUrl} />
+        <Header storeUrl={storeUrl} showDiary={hasDiary} />
         <PageTransition>
           <div className="min-h-screen">{children}</div>
         </PageTransition>
