@@ -12,6 +12,7 @@ import { getSettingsAdmin } from "@/lib/admin-store";
 import { readContentOverride } from "@/lib/content-overrides";
 import { getUpcomingShows, getPastShows } from "@/lib/content";
 import type { Show } from "@/lib/content";
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
 
@@ -19,12 +20,12 @@ export function generateMetadata(): Metadata {
   const title = "הופעות — עלמה גוב";
   const description = "כל ההופעות הקרובות ושעברו של עלמה גוב — תאריכים, מקומות, וכרטיסים.";
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,
       description,
-      url: "https://almagov.co.il/shows",
+      url: `${SITE_URL}/shows`,
       siteName: "עלמה גוב",
       locale: "he_IL",
       type: "website",
@@ -288,7 +289,7 @@ export default async function ShowsPage() {
                                 href={show.ticketUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="rounded-full bg-blush-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blush-600"
+                                className="rounded-full bg-blush-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blush-700"
                               >
                                 {t("tickets")}
                               </a>
@@ -298,7 +299,7 @@ export default async function ShowsPage() {
                               href={show.ticketUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="rounded-full bg-blush-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blush-600"
+                              className="rounded-full bg-blush-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blush-700"
                             >
                               {t("tickets")}
                             </a>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import {
@@ -69,8 +70,7 @@ export async function createDiaryEntry(formData: FormData): Promise<void> {
   const entry = buildEntryFromForm(formData);
   await setDiaryEntries([entry, ...entries]);
   revalidatePath("/admin/diary");
-  revalidatePath("/diary");
-  revalidatePath("/");
+  revalidatePublicSite();
   redirect(`/admin/diary/${entry.id}`);
 }
 
@@ -101,9 +101,7 @@ export async function updateDiaryEntry(
 
   revalidatePath("/admin/diary");
   revalidatePath(`/admin/diary/${id}`);
-  revalidatePath("/diary");
-  revalidatePath(`/diary/${next.slug}`);
-  revalidatePath("/");
+  revalidatePublicSite();
 }
 
 export async function deleteDiaryEntry(id: string): Promise<void> {
@@ -119,8 +117,7 @@ export async function deleteDiaryEntry(id: string): Promise<void> {
   }
 
   revalidatePath("/admin/diary");
-  revalidatePath("/diary");
-  revalidatePath("/");
+  revalidatePublicSite();
   redirect("/admin/diary");
 }
 
@@ -179,8 +176,5 @@ export async function patchDiaryFieldInline(
   await setDiaryEntries(list);
   revalidatePath("/admin/diary");
   revalidatePath(`/admin/diary/${id}`);
-  revalidatePath("/diary");
-  revalidatePath(`/diary/${updated.slug}`);
-  revalidatePath(`/en/diary/${updated.slug}`);
-  revalidatePath("/");
+  revalidatePublicSite();
 }

@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/config";
+import { getAdminLyrics } from "@/lib/admin-store";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_URL;
 
   // The site is Hebrew-only — one unprefixed URL per route. The previous
@@ -21,6 +24,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   }
 
+  // Lyrics pages for every admin-managed song that has lyrics. A store
+  // outage just omits them rather than failing the whole sitemap.
+  const lyrics = await getAdminLyrics().catch(() => []);
+  const lyricEntries = lyrics
+    .filter((l) => l.slug && l.lyricsHe?.trim())
+    .map((l) =>
+      entry(`/lyrics/${encodeURIComponent(l.slug)}`, {
+        priority: 0.5,
+        changeFrequency: "monthly",
+      })
+    );
+
   return [
     entry("/", { priority: 1, changeFrequency: "weekly" }),
     entry("/music", { priority: 0.8, changeFrequency: "monthly" }),
@@ -29,9 +44,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/about", { priority: 0.6, changeFrequency: "monthly" }),
     entry("/contact", { priority: 0.5, changeFrequency: "yearly" }),
     entry("/diary", { priority: 0.4, changeFrequency: "weekly" }),
-    // Lyrics pages — mirror the static fallback slugs in lib/static-lyrics.ts.
-    entry("/lyrics/shir-varod", { priority: 0.5, changeFrequency: "monthly" }),
-    entry("/lyrics/ma-laasot-im-hazeev", { priority: 0.5, changeFrequency: "monthly" }),
-    entry("/lyrics/bsibub", { priority: 0.5, changeFrequency: "monthly" }),
+    ...lyricEntries,
   ];
 }

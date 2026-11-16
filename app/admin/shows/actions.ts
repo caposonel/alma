@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import {
@@ -82,8 +83,7 @@ function isPastBucket(status: ShowStatus): "upcoming" | "past" {
 }
 
 function invalidatePublicShowPaths(): void {
-  revalidatePath("/");
-  revalidatePath("/shows");
+  revalidatePublicSite();
 }
 
 export async function createShow(formData: FormData): Promise<void> {

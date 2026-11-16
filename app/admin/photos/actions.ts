@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { auth } from "@/auth";
 import {
   getPhotosAdmin,
@@ -72,7 +73,7 @@ export async function savePhotos(formData: FormData): Promise<void> {
   await Promise.all(orphanUrls.map((url) => deleteBlobIfManaged(url)));
 
   revalidatePath("/admin/photos");
-  revalidatePath("/gallery");
+  revalidatePublicSite();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -114,6 +115,5 @@ export async function patchPhotoFieldInline(
   list[idx] = updated;
   await setPhotosAdmin(list);
   revalidatePath("/admin/photos");
-  revalidatePath("/gallery");
-  revalidatePath("/en/gallery");
+  revalidatePublicSite();
 }

@@ -17,6 +17,7 @@ import {
   getAdminFeaturedVideo,
   urlFor,
 } from "@/lib/content";
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
 
@@ -24,12 +25,12 @@ export function generateMetadata(): Metadata {
   const title = "גלריה — עלמה גוב";
   const description = "תמונות, קליפים ורגעים מאחורי הקלעים.";
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,
       description,
-      url: "https://almagov.co.il/gallery",
+      url: `${SITE_URL}/gallery`,
       siteName: "עלמה גוב",
       locale: "he_IL",
       type: "website",

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { auth } from "@/auth";
 import { getAbout, setAbout, type AdminAbout } from "@/lib/admin-store";
 
@@ -90,8 +91,7 @@ export async function saveAbout(formData: FormData): Promise<void> {
   const next = parseAboutPayload(raw);
   await setAbout(next);
   revalidatePath("/admin/about");
-  revalidatePath("/about");
-  revalidatePath("/en/about");
+  revalidatePublicSite();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -118,8 +118,7 @@ async function patchAbout(
   const next = patch(existing);
   await setAbout(next);
   revalidatePath("/admin/about");
-  revalidatePath("/about");
-  revalidatePath("/en/about");
+  revalidatePublicSite();
 }
 
 /**

@@ -292,7 +292,7 @@ export function IsraelMap({ shows, className = "", highlightCity, onCityClick, o
                     href={show.ticketUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1.5 inline-block text-sm font-medium text-blush-600 hover:text-blush-700 hover:underline"
+                    className="mt-1.5 inline-block text-sm font-medium text-blush-700 hover:underline"
                   >
                     לכרטיסים &larr;
                   </a>

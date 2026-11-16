@@ -16,6 +16,7 @@ import {
   getSettingsAdmin,
   type AdminLyric,
 } from "@/lib/admin-store";
+import { SITE_URL } from "@/lib/config";
 
 // Public Spotify artist ID used only for the streaming-link URL.
 // No Spotify API auth involved — this is the open.spotify.com public artist page.
@@ -31,12 +32,12 @@ export function generateMetadata(): Metadata {
   const title = "מוזיקה — עלמה גוב";
   const description = "כל השירים, הסינגלים והאלבומים של עלמה גוב. להאזנה בכל הפלטפורמות.";
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,
       description,
-      url: "https://almagov.co.il/music",
+      url: `${SITE_URL}/music`,
       siteName: "עלמה גוב",
       locale: "he_IL",
       type: "profile",

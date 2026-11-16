@@ -48,7 +48,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="text-ink-soft transition-colors hover:text-blush-500"
+              className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
             >
               <InstagramIcon className="h-5 w-5" />
             </a>
@@ -57,7 +57,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Spotify"
-              className="text-ink-soft transition-colors hover:text-blush-500"
+              className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
             >
               <SpotifyIcon className="h-5 w-5" />
             </a>
@@ -66,7 +66,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="YouTube"
-              className="text-ink-soft transition-colors hover:text-blush-500"
+              className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
             >
               <YoutubeIcon className="h-5 w-5" />
             </a>

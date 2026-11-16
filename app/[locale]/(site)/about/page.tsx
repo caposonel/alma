@@ -27,6 +27,7 @@ import { saveContentOverrideInline } from "@/app/admin/settings/actions";
 import { getSettingsAdmin } from "@/lib/admin-store";
 import { readContentOverride } from "@/lib/content-overrides";
 import { getAdminAbout } from "@/lib/content";
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
 
@@ -34,12 +35,12 @@ export function generateMetadata(): Metadata {
   const title = "אודות — עלמה גוב";
   const description = "קצת על עלמה גוב — כותבת, מלחינה ויוצרת.";
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,
       description,
-      url: "https://almagov.co.il/about",
+      url: `${SITE_URL}/about`,
       siteName: "עלמה גוב",
       locale: "he_IL",
       type: "profile",
@@ -317,7 +318,7 @@ export default async function AboutPage() {
             <FloatingDoodle className="absolute -end-6 top-4" intensity={4} duration={6}>
               <MusicNote className="h-5 w-4 opacity-30" />
             </FloatingDoodle>
-            <FloatingDoodle className="absolute -end-8 bottom-8" intensity={3} duration={8}>
+            <FloatingDoodle className="absolute -end-2 bottom-8 md:-end-8" intensity={3} duration={8}>
               <Star className="h-4 w-4 opacity-30" />
             </FloatingDoodle>
           </div>

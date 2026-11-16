@@ -60,10 +60,32 @@ interface ListStore extends Store {
   lrange?<T>(key: string): Promise<T[]>;
 }
 
+type KvClient = Awaited<typeof import("@vercel/kv")>["kv"];
+let kvClient: KvClient | null = null;
+
+/**
+ * Shared KV client tuned to fail fast. The default Upstash client retries
+ * network errors 5 times with exponential backoff (~4.3s total), which made
+ * every page hang for ~4.5s while the database was unreachable. One quick
+ * retry plus a per-request timeout keeps an outage cheap: pages fall back
+ * to static content within a fraction of a second.
+ */
+export async function getKvClient(): Promise<KvClient> {
+  if (kvClient) return kvClient;
+  const { createClient } = await import("@vercel/kv");
+  kvClient = createClient({
+    url: process.env.KV_REST_API_URL!,
+    token: process.env.KV_REST_API_TOKEN!,
+    retry: { retries: 1, backoff: () => 100 },
+    signal: () => AbortSignal.timeout(3000),
+  });
+  return kvClient;
+}
+
 let vercelKvStore: ListStore | null = null;
 async function getVercelKvStore(): Promise<ListStore> {
   if (vercelKvStore) return vercelKvStore;
-  const { kv } = await import("@vercel/kv");
+  const kv = await getKvClient();
   vercelKvStore = {
     async get<T>(key: string): Promise<T | null> {
       return (await kv.get<T>(key)) ?? null;
@@ -532,7 +554,7 @@ export async function removeSubscriber(id: string): Promise<void> {
     // Clear the KV list by trimming to an empty range. Fresh subscribers
     // added after this will lpush onto an empty list, which is fine.
     try {
-      const { kv } = await import("@vercel/kv");
+      const kv = await getKvClient();
       await kv.del(SUBSCRIBERS_LIST_KEY);
     } catch (err) {
       // If clearing the list fails, the legacy-key write below still

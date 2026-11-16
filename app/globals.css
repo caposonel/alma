@@ -21,6 +21,8 @@
   --color-blush-400: #e89595;
   --color-blush-500: #d97777;
   --color-blush-600: #b85959;
+  /* Darker step for small text/links: ≥5:1 contrast on paper backgrounds. */
+  --color-blush-700: #9e4848;
 
   /* Doodle accent */
   --color-pink-doodle: #e5a0a0;

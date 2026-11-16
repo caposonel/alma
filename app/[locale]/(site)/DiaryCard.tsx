@@ -55,7 +55,7 @@ export async function DiaryCard() {
             </p>
             <Link
               href="/diary"
-              className="mt-4 inline-flex items-center gap-1 text-sm text-blush-500 transition-colors hover:text-blush-600 md:text-base lg:text-lg"
+              className="mt-4 inline-flex items-center gap-1 text-sm text-blush-700 transition-colors hover:text-blush-600 md:text-base lg:text-lg"
             >
               {t("readMore")}
             </Link>

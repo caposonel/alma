@@ -6,7 +6,6 @@ import { MusicPlayerProvider } from "@/lib/music-player-context";
 import { AdminModeProvider } from "@/lib/admin-mode-context";
 import { EditorSidebar } from "@/components/admin/EditorSidebar";
 import { ClientExtras } from "./_ClientExtras";
-import { auth } from "@/auth";
 import { getSettingsAdmin } from "@/lib/admin-store";
 import { SOCIAL_LINKS } from "@/lib/config";
 
@@ -26,15 +25,12 @@ export default async function SiteLayout({
   });
   const storeUrl = settings?.storeUrl ?? SOCIAL_LINKS.bandcamp;
 
-  /* Determine whether the visitor is an authenticated admin. The
-   * inline-editing UI only ACTIVATES inside the `/admin/edit` preview
-   * iframe (the AdminModeProvider detects it's been embedded there); the
-   * public site itself shows no admin UI to anyone, admin or not. */
-  const session = await auth();
-  const isAdmin = !!session?.user;
-
+  /* No server-side session check here: reading cookies would make every
+   * public page dynamic (uncacheable). The inline-editing UI only activates
+   * inside the `/admin/edit` preview iframe, and AdminModeProvider checks
+   * the session client-side there. */
   return (
-    <AdminModeProvider isAdmin={isAdmin}>
+    <AdminModeProvider>
       <MusicPlayerProvider>
         <ScrollProgress />
         <Header storeUrl={storeUrl} />

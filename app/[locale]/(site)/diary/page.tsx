@@ -11,6 +11,7 @@ import { getSettingsAdmin } from "@/lib/admin-store";
 import { readContentOverride } from "@/lib/content-overrides";
 import { getAllDiaryEntries, urlFor } from "@/lib/content";
 import type { DiaryEntry } from "@/lib/content";
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
 
@@ -18,12 +19,12 @@ export function generateMetadata(): Metadata {
   const title = "יומן / מכתבים — עלמה גוב";
   const description = "מחשבות, זיכרונות, שירים, וסיפורים קטנים מהיומן של עלמה.";
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,
       description,
-      url: "https://almagov.co.il/diary",
+      url: `${SITE_URL}/diary`,
       siteName: "עלמה גוב",
       locale: "he_IL",
       type: "website",

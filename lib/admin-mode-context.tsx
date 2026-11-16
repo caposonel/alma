@@ -15,9 +15,9 @@ import {
  * `<Editable*>` wrappers (highlight on hover when edit mode is on), and the
  * EditorSidebar (renders the form for whichever field is selected).
  *
- * `isAdmin` is set server-side via the NextAuth session and threaded down
- * from the site layout. Visitors who aren't logged in never see any of the
- * editing UI — `editMode` is locked to false for them.
+ * `isAdmin` is resolved client-side, only inside the `/admin/edit` preview
+ * iframe (see the effect below). Visitors who aren't logged in never see any
+ * of the editing UI — `editMode` is locked to false for them.
  *
  * `editMode` is a session-only client toggle (no persistence). It's off by
  * default so the admin sees the site as visitors do, and flips on when they
@@ -61,13 +61,8 @@ interface AdminModeContextValue {
 
 const AdminModeContext = createContext<AdminModeContextValue | null>(null);
 
-export function AdminModeProvider({
-  isAdmin,
-  children,
-}: {
-  isAdmin: boolean;
-  children: ReactNode;
-}) {
+export function AdminModeProvider({ children }: { children: ReactNode }) {
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [editMode, setEditModeRaw] = useState<boolean>(false);
   const [activeField, setActiveField] = useState<EditorField | null>(null);
 
@@ -79,30 +74,40 @@ export function AdminModeProvider({
     if (!on) setActiveField(null);
   }, []);
 
-  /* Auto-enable edit mode when this page is loaded inside the `/admin/edit`
-   * preview iframe. Detection logic:
+  /* Admin detection happens client-side, and only inside the `/admin/edit`
+   * preview iframe. Checking the session on the server (as this used to)
+   * read cookies in the public layout, which made every public page
+   * dynamic and uncacheable. Steps:
    *   1. We're running inside an iframe (`window.self !== window.top`).
-   *   2. The parent window is same-origin (try/catch the property access —
-   *      cross-origin parents throw a `SecurityError` on access).
+   *   2. The parent window is same-origin (cross-origin parents throw a
+   *      `SecurityError` on property access).
    *   3. The parent's pathname starts with `/admin/edit`.
-   * If all three hold AND the visitor is an admin, flip edit mode on.
-   *
-   * Doesn't run when visiting the public site directly — the parent check
-   * fails (no iframe) and editMode stays off. So a logged-in admin
-   * browsing the site sees zero editing UI; the experience only lights up
-   * inside the admin preview pane. */
+   *   4. `/api/auth/session` confirms a logged-in admin.
+   * Then edit mode turns on. Public visitors never hit step 4, so the
+   * public site does no extra work. Saving still goes through server
+   * actions that verify the session themselves (`requireAdmin`). */
   useEffect(() => {
-    if (!isAdmin || typeof window === "undefined") return;
-    if (window.self === window.top) return;
+    if (typeof window === "undefined" || window.self === window.top) return;
+    let inEditor = false;
     try {
-      const parentPath = window.parent.location.pathname;
-      if (parentPath.startsWith("/admin/edit")) {
-        setEditMode(true);
-      }
+      inEditor = window.parent.location.pathname.startsWith("/admin/edit");
     } catch {
       // Cross-origin parent — not our admin host, ignore.
     }
-  }, [isAdmin, setEditMode]);
+    if (!inEditor) return;
+    let cancelled = false;
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((session: { user?: unknown } | null) => {
+        if (cancelled || !session?.user) return;
+        setIsAdmin(true);
+        setEditMode(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [setEditMode]);
 
   const value = useMemo<AdminModeContextValue>(
     () => ({

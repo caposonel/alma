@@ -17,18 +17,20 @@ import { EditableText } from "@/components/admin/Editable";
 import { saveContentOverrideInline } from "@/app/admin/settings/actions";
 import { getSettingsAdmin } from "@/lib/admin-store";
 import { readContentOverride } from "@/lib/content-overrides";
-import { SOCIAL_LINKS } from "@/lib/config";
+import { SOCIAL_LINKS, SITE_URL } from "@/lib/config";
+
+export const revalidate = 60;
 
 export function generateMetadata(): Metadata {
   const title = "צור קשר — עלמה גוב";
   const description = "רוצים לשלוח מכתב? הזמנה להופעה? שאלה? כתבו לי.";
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,
       description,
-      url: "https://almagov.co.il/contact",
+      url: `${SITE_URL}/contact`,
       siteName: "עלמה גוב",
       locale: "he_IL",
       type: "website",
@@ -112,7 +114,7 @@ export default async function ContactPage() {
                 <a
                   href="mailto:almagov.music@gmail.com"
                   dir="ltr"
-                  className="text-sm text-blush-500 underline decoration-blush-300 underline-offset-2 transition-colors hover:text-blush-600"
+                  className="text-sm text-blush-700 underline decoration-blush-300 underline-offset-2 transition-colors hover:text-blush-600"
                 >
                   almagov.music@gmail.com
                 </a>
@@ -129,7 +131,7 @@ export default async function ContactPage() {
                 <a
                   href="mailto:almagov.music@gmail.com"
                   dir="ltr"
-                  className="text-sm text-blush-500 underline decoration-blush-300 underline-offset-2 transition-colors hover:text-blush-600"
+                  className="text-sm text-blush-700 underline decoration-blush-300 underline-offset-2 transition-colors hover:text-blush-600"
                 >
                   almagov.music@gmail.com
                 </a>

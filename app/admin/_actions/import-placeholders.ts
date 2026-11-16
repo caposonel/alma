@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { auth } from "@/auth";
 import {
   getDiaryEntries,
@@ -108,11 +109,9 @@ export async function importDiaryPlaceholders(): Promise<ImportResult> {
 
   await setDiaryEntries(entries);
   revalidatePath("/admin/diary");
-  revalidatePath("/diary");
-  revalidatePath("/");
+  revalidatePublicSite();
   for (const e of entries) {
-    revalidatePath(`/diary/${e.slug}`);
-    revalidatePath(`/en/diary/${e.slug}`);
+    revalidatePublicSite();
   }
   return { ok: true, imported: entries.length };
 }
@@ -160,8 +159,7 @@ export async function importShowsPlaceholders(): Promise<ImportResult> {
     setPastShowsAdmin(past),
   ]);
   revalidatePath("/admin/shows");
-  revalidatePath("/shows");
-  revalidatePath("/");
+  revalidatePublicSite();
   return { ok: true, imported: upcoming.length + past.length };
 }
 
@@ -188,8 +186,7 @@ export async function importPhotosPlaceholders(): Promise<ImportResult> {
 
   await setPhotosAdmin(photos);
   revalidatePath("/admin/photos");
-  revalidatePath("/gallery");
-  revalidatePath("/en/gallery");
+  revalidatePublicSite();
   return { ok: true, imported: photos.length };
 }
 
@@ -235,8 +232,7 @@ export async function importAboutPlaceholders(): Promise<ImportResult> {
 
   await setAbout(next);
   revalidatePath("/admin/about");
-  revalidatePath("/about");
-  revalidatePath("/en/about");
+  revalidatePublicSite();
   const imported =
     next.funFacts.length +
     next.milestones.length +

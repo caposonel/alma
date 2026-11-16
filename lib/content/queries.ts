@@ -361,6 +361,6 @@ export async function getTrackBySlug(slug: string): Promise<{
     console.error("KV lyrics read failed:", err);
     return null;
   }
-  // When this returns null, the /lyrics/[slug] page falls back to its
-  // hand-written static set (lib/static-lyrics.ts).
+  // When this returns null, the /lyrics/[slug] page 404s (there is no
+  // static fallback).
 }

@@ -11,6 +11,7 @@ import { Heart, Guitar, Butterfly } from "@/components/decorative";
 import { cn } from "@/lib/utils";
 import { subscribeAction } from "@/app/[locale]/(site)/_mailing/subscribe";
 import { useMusicPlayer } from "@/lib/music-player-context";
+import { HONEYPOT_STYLE } from "@/lib/honeypot";
 
 /**
  * Sticky bottom "newsletter" bar. Stores subscribers via `subscribeAction`
@@ -155,7 +156,8 @@ export function MailingBar() {
             transition={{ type: "spring", damping: 22, stiffness: 180, delay: 0.6 }}
             className={cn(
               "fixed bottom-0 start-0 end-0 z-30",
-              "min-h-[70px] py-3 px-6",
+              // Mobile: compact single row, end padding leaves room for the ✕.
+              "py-2 ps-4 pe-12 md:min-h-[70px] md:py-3 md:px-6",
               // `backdrop-blur` is GPU-expensive on mid-tier phones when
               // stacked with other fixed surfaces (header + this bar +
               // mini-player). Limit it to ≥md so mobile gets a solid
@@ -231,7 +233,7 @@ export function MailingBar() {
               {/* Center: prompt + inline form (or thank-you message) */}
               <div className="flex flex-1 items-center justify-center">
                 {submitted ? (
-                  <p className="font-display text-base text-blush-600">
+                  <p className="font-display text-base text-blush-700">
                     {t("thanks")}
                   </p>
                 ) : (
@@ -240,7 +242,7 @@ export function MailingBar() {
                     // items-center keeps all three children (prompt / input / button)
                     // vertically centered on the same baseline — fixes the prior
                     // visual offset where the button looked smaller and floated above.
-                    className="flex w-full max-w-xl flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-3"
+                    className="flex w-full max-w-xl flex-row items-center gap-2 sm:gap-3"
                   >
                     {/* Honeypot — visually offscreen so bots fill it. */}
                     <input
@@ -249,13 +251,7 @@ export function MailingBar() {
                       autoComplete="off"
                       aria-hidden="true"
                       {...register("website")}
-                      style={{
-                        position: "absolute",
-                        left: "-9999px",
-                        width: "1px",
-                        height: "1px",
-                        opacity: 0,
-                      }}
+                      style={HONEYPOT_STYLE}
                     />
 
                     <span className="hidden whitespace-nowrap text-base font-medium text-ink md:inline">
@@ -276,7 +272,7 @@ export function MailingBar() {
                         // same rounded-full, same border-2 thickness, same
                         // px-6. Only the color treatment differs.
                         className={cn(
-                          "box-border block h-11 w-full rounded-full border-2 border-blush-200 bg-paper px-6 text-end text-base text-ink transition-colors placeholder:text-ink-soft/50 focus:border-blush-400 focus:outline-none focus:shadow-[0_0_0_2px_rgba(217,119,119,0.15)]",
+                          "box-border block h-10 w-full min-w-0 rounded-full border-2 border-blush-200 bg-paper px-4 text-end md:h-11 md:px-6 text-base text-ink transition-colors placeholder:text-ink-soft/50 focus:border-blush-400 focus:outline-none focus:shadow-[0_0_0_2px_rgba(217,119,119,0.15)]",
                           errors.email && errorInputClasses
                         )}
                       />
@@ -295,7 +291,7 @@ export function MailingBar() {
                       disabled={isSubmitting}
                       // Matched 1:1 to the input above — same h-11, rounded-full,
                       // border-2 thickness, px-6.
-                      className="box-border inline-flex h-11 items-center justify-center whitespace-nowrap rounded-full border-2 border-blush-500 bg-blush-500 px-6 text-base font-semibold text-white transition-colors hover:border-blush-600 hover:bg-blush-600 disabled:opacity-50"
+                      className="box-border inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full border-2 border-blush-600 bg-blush-600 px-4 text-base md:h-11 md:px-6 font-semibold text-white transition-colors hover:border-blush-700 hover:bg-blush-700 disabled:opacity-50"
                     >
                       {isSubmitting ? t("submitting") : t("submit")}
                     </button>
@@ -416,7 +412,7 @@ function MiniPlayer({
         type="button"
         onClick={onTogglePlay}
         aria-label={isPaused ? playLabel : pauseLabel}
-        className="flex h-11 w-11 md:h-9 md:w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-blush-400 bg-blush-500 text-white shadow-sm transition-colors hover:border-blush-600 hover:bg-blush-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
+        className="flex h-11 w-11 md:h-9 md:w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-blush-400 bg-blush-600 text-white shadow-sm transition-colors hover:border-blush-700 hover:bg-blush-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
       >
         {isPaused ? (
           <Play className="h-3.5 w-3.5 fill-current translate-x-[1px]" aria-hidden="true" />

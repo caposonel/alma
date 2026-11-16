@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { auth } from "@/auth";
 import {
   getSettingsAdmin,
@@ -47,7 +48,7 @@ export async function saveSettings(formData: FormData): Promise<void> {
   revalidatePath("/admin/settings");
   // Revalidate the public pages that read site settings (hero on home,
   // Header store link on every page under [locale]/(site)).
-  revalidatePath("/", "layout");
+  revalidatePublicSite();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -63,7 +64,7 @@ async function patchSettings(
   const existing = (await getSettingsAdmin()) ?? {};
   await setSettingsAdmin({ ...existing, ...patch });
   revalidatePath("/admin/settings");
-  revalidatePath("/", "layout");
+  revalidatePublicSite();
 }
 
 /**

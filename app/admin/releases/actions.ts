@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import {
@@ -57,7 +58,7 @@ export async function createRelease(formData: FormData): Promise<void> {
   const release = buildReleaseFromForm(formData);
   await setReleasesAdmin([release, ...releases]);
   revalidatePath("/admin/releases");
-  revalidatePath("/music");
+  revalidatePublicSite();
   redirect(`/admin/releases/${release.id}`);
 }
 
@@ -75,7 +76,7 @@ export async function updateRelease(
   await setReleasesAdmin(updated);
   revalidatePath("/admin/releases");
   revalidatePath(`/admin/releases/${id}`);
-  revalidatePath("/music");
+  revalidatePublicSite();
 }
 
 export async function deleteRelease(id: string): Promise<void> {
@@ -83,6 +84,6 @@ export async function deleteRelease(id: string): Promise<void> {
   const releases = await getReleasesAdmin();
   await setReleasesAdmin(releases.filter((r) => r.id !== id));
   revalidatePath("/admin/releases");
-  revalidatePath("/music");
+  revalidatePublicSite();
   redirect("/admin/releases");
 }

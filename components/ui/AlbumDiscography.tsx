@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { SpotifyIcon, AppleMusicIcon, YoutubeIcon, BandcampIcon } from "./SocialIcons";
@@ -141,17 +142,17 @@ function AlbumCard({
             const title = track.titleHe;
             const isActive = track.spotifyTrackId === currentTrackId;
             return (
-              <li key={track.slug}>
+              <li key={track.slug} className="flex items-center gap-1">
                 <motion.button
                   type="button"
                   onClick={() => onSelectTrack(track)}
                   whileHover={{ x: 2 }}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-md px-3 py-2 text-start text-sm transition-colors",
+                    "flex min-w-0 flex-1 items-center gap-3 rounded-md px-3 py-2 text-start text-sm transition-colors",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300",
                     isActive
-                      ? "bg-blush-500 text-white shadow-sm"
+                      ? "bg-blush-600 text-white shadow-sm"
                       : "text-ink hover:bg-blush-50 hover:text-blush-600"
                   )}
                   aria-pressed={isActive}
@@ -173,6 +174,15 @@ function AlbumCard({
                     </span>
                   )}
                 </motion.button>
+                {track.lyricsHe?.trim() && (
+                  <Link
+                    href={`/lyrics/${encodeURIComponent(track.slug)}`}
+                    aria-label={`מילים לשיר ${title}`}
+                    className="shrink-0 rounded-md px-2 py-2 text-xs font-medium text-blush-700 underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
+                  >
+                    מילים
+                  </Link>
+                )}
               </li>
             );
           })}

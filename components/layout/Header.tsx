@@ -133,7 +133,7 @@ export function Header({ storeUrl }: HeaderProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="text-ink-soft transition-colors hover:text-blush-500"
+                className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
               >
                 <InstagramIcon className="h-5 w-5" />
               </a>
@@ -142,7 +142,7 @@ export function Header({ storeUrl }: HeaderProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Spotify"
-                className="text-ink-soft transition-colors hover:text-blush-500"
+                className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
               >
                 <SpotifyIcon className="h-5 w-5" />
               </a>
@@ -151,7 +151,7 @@ export function Header({ storeUrl }: HeaderProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
-                className="text-ink-soft transition-colors hover:text-blush-500"
+                className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
               >
                 <YoutubeIcon className="h-5 w-5" />
               </a>
@@ -200,6 +200,10 @@ export function Header({ storeUrl }: HeaderProps) {
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         )}
+        // `inert` while closed: removes the hidden links from keyboard tab
+        // order and the accessibility tree (aria-hidden alone left them
+        // focusable).
+        inert={!drawerOpen}
       >
         {/* Backdrop */}
         <div
@@ -224,7 +228,6 @@ export function Header({ storeUrl }: HeaderProps) {
               : "rtl:-translate-x-full ltr:translate-x-full"
           )}
           aria-label="Mobile menu"
-          aria-hidden={!drawerOpen}
         >
           <div className="mb-8 flex items-center justify-between">
             <span className="font-display text-2xl font-bold text-ink">עלמה גוב</span>
@@ -247,7 +250,7 @@ export function Header({ storeUrl }: HeaderProps) {
                   : pathname.startsWith(link.href);
               const className = cn(
                 "text-lg transition-colors",
-                isActive ? "font-medium text-blush-500" : "text-ink-soft"
+                isActive ? "font-medium text-blush-700" : "text-ink-soft"
               );
               const label = t(link.labelKey);
               return link.external ? (
@@ -273,7 +276,7 @@ export function Header({ storeUrl }: HeaderProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="text-ink-soft transition-colors hover:text-blush-500"
+              className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
             >
               <InstagramIcon className="h-5 w-5" />
             </a>
@@ -282,7 +285,7 @@ export function Header({ storeUrl }: HeaderProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Spotify"
-              className="text-ink-soft transition-colors hover:text-blush-500"
+              className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
             >
               <SpotifyIcon className="h-5 w-5" />
             </a>
@@ -291,7 +294,7 @@ export function Header({ storeUrl }: HeaderProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="YouTube"
-              className="text-ink-soft transition-colors hover:text-blush-500"
+              className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
             >
               <YoutubeIcon className="h-5 w-5" />
             </a>
@@ -300,7 +303,7 @@ export function Header({ storeUrl }: HeaderProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Bandcamp"
-              className="text-ink-soft transition-colors hover:text-blush-500"
+              className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
             >
               <BandcampIcon className="h-5 w-5" />
             </a>

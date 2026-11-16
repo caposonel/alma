@@ -6,10 +6,6 @@ import { HandwrittenUnderline } from "@/components/ui";
 import { Heart, Star, MusicNote, NotebookLines } from "@/components/decorative";
 import { ScrollReveal, FloatingDoodle, LyricsReveal, ParallaxLayer } from "@/components/motion";
 import { getTrackBySlug } from "@/lib/content";
-import {
-  getStaticLyricBySlug,
-  type StaticLyric,
-} from "@/lib/static-lyrics";
 import { looksLikeLRC } from "@/lib/lrclib";
 
 /* When the admin store's `lyricsHe` has been baked with LRC timestamps
@@ -42,8 +38,15 @@ function stripLrcTimestamps(text: string): string {
     .trim();
 }
 import { SpotifyIcon } from "@/components/ui/SocialIcons";
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
+
+// Empty list = no pages built ahead of time; each one renders on its first
+// visit and is then cached (ISR) like the rest of the site.
+export function generateStaticParams() {
+  return [];
+}
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -52,8 +55,7 @@ type Props = { params: Promise<{ slug: string }> };
  *
  * The admin-managed lyric store is tried first — if a track is found, its
  * `lyricsHe` is required (a track without HE lyrics isn't really a lyrics
- * page). If the admin store has nothing useful, fall back to the
- * hand-written static set. Returns null when neither source has the slug,
+ * page). Returns null when the store has no lyrics for the slug,
  * triggering `notFound()`.
  */
 async function resolveLyrics(slug: string): Promise<{
@@ -74,31 +76,22 @@ async function resolveLyrics(slug: string): Promise<{
     };
   }
 
-  const fallback: StaticLyric | null = getStaticLyricBySlug(slug);
-  if (fallback) {
-    return {
-      titleHe: fallback.titleHe,
-      releaseTitle: fallback.releaseTitle,
-      releaseDate: fallback.releaseDate,
-      lyricsHe: fallback.lyricsHe,
-      spotifyTrackId: fallback.spotifyTrackId,
-    };
-  }
-
+  // No static fallback: the old fallback served invented placeholder verses
+  // under real song titles. Unknown slugs (or a store outage) now 404.
   return null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const lyric = await resolveLyrics(slug);
-  if (!lyric) return { title: "לא נמצא — עלמה גוב" };
+  if (!lyric) return { title: { absolute: "לא נמצא — עלמה גוב" } };
 
   const title = `${lyric.titleHe} — מילים — עלמה גוב`;
   const description = `מילים לשיר "${lyric.titleHe}" מתוך ${lyric.releaseTitle}`;
-  const url = `https://almagov.co.il/lyrics/${slug}`;
+  const url = `${SITE_URL}/lyrics/${slug}`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,

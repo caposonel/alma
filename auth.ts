@@ -1,6 +1,11 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import {
+  clientIp,
+  isLoginBlocked,
+  recordLoginFailure,
+} from "@/lib/login-rate-limit";
 
 /**
  * Custom admin panel auth.
@@ -73,15 +78,26 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         username: { label: "Username" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!ADMIN_PASSWORD_HASH) return null;
-        if (credentials?.username !== ADMIN_USERNAME) return null;
+
+        // Brute-force protection: refuse once an IP has too many recent
+        // failures (see lib/login-rate-limit.ts).
+        const ip = clientIp(request);
+        if (await isLoginBlocked(ip)) {
+          console.warn("[auth] login throttled for", ip);
+          return null;
+        }
 
         const password = credentials?.password;
-        if (typeof password !== "string") return null;
-
-        const ok = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
-        if (!ok) return null;
+        const ok =
+          credentials?.username === ADMIN_USERNAME &&
+          typeof password === "string" &&
+          (await bcrypt.compare(password, ADMIN_PASSWORD_HASH));
+        if (!ok) {
+          await recordLoginFailure(ip);
+          return null;
+        }
 
         return {
           id: "admin",

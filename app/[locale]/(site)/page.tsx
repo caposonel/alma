@@ -19,6 +19,7 @@ import { EditableLongText } from "@/components/admin/Editable";
 import { saveHeroDescriptionInline } from "@/app/admin/settings/actions";
 import { getSiteSettings, getUpcomingShows } from "@/lib/content";
 import type { Show } from "@/lib/content";
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
 
@@ -31,12 +32,12 @@ const HOME_META = {
 
 export function generateMetadata(): Metadata {
   return {
-    title: HOME_META.title,
+    title: { absolute: HOME_META.title },
     description: HOME_META.description,
     openGraph: {
       title: HOME_META.title,
       description: HOME_META.description,
-      url: "https://almagov.co.il/",
+      url: `${SITE_URL}/`,
       siteName: "עלמה גוב",
       locale: "he_IL",
       type: "profile",

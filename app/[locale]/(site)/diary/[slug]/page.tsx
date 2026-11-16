@@ -14,19 +14,26 @@ import {
 import { patchDiaryFieldInline } from "@/app/admin/diary/actions";
 import { getDiaryEntryBySlug, urlFor } from "@/lib/content";
 import { notFound } from "next/navigation";
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
+
+// Empty list = no pages built ahead of time; each one renders on its first
+// visit and is then cached (ISR) like the rest of the site.
+export function generateStaticParams() {
+  return [];
+}
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const entry = await getDiaryEntryBySlug(slug);
-  if (!entry) return { title: "לא נמצא — עלמה גוב" };
+  if (!entry) return { title: { absolute: "לא נמצא — עלמה גוב" } };
 
   const title = `${entry.title} — עלמה גוב`;
   const description = entry.excerpt || "מהיומן של עלמה גוב";
-  const url = `https://almagov.co.il/diary/${slug}`;
+  const url = `${SITE_URL}/diary/${slug}`;
 
   // Prefer the admin-managed coverImage; fall back to staticImage; finally diary placeholder.
   const ogImage = entry.coverImage
@@ -36,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     entry.coverImage?.alt ?? entry.staticImage?.alt ?? entry.title;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,

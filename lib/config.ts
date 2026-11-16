@@ -8,8 +8,26 @@
  * when wired up.
  */
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://almagov.co.il";
+/**
+ * Canonical public URL, used for sitemap, robots, canonical links and
+ * social-share metadata. Resolution order:
+ *   1. `NEXT_PUBLIC_SITE_URL` — explicit override.
+ *   2. Vercel's production domain (set automatically on Vercel; becomes the
+ *      custom domain once one is attached to the project).
+ *   3. The current Vercel domain as a last resort.
+ * It used to default to `almagov.co.il`, which isn't connected, so search
+ * engines and share previews were pointed at a dead domain.
+ */
+const vercelProductionHost =
+  process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ||
+  process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (vercelProductionHost
+    ? `https://${vercelProductionHost}`
+    : "https://alma-brown.vercel.app")
+).replace(/\/$/, "");
 
 /**
  * Fallback social URLs — used by the layout client components.

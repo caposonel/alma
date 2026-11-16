@@ -70,7 +70,7 @@ export async function ShowsCard({ shows }: ShowsCardProps) {
                     href={show.ticketUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-blush-600 transition-colors hover:text-blush-700 md:text-base lg:text-lg"
+                    className="text-sm font-medium text-blush-700 transition-colors hover:text-blush-600 md:text-base lg:text-lg"
                   >
                     {t("details")}
                   </a>
@@ -86,7 +86,7 @@ export async function ShowsCard({ shows }: ShowsCardProps) {
         <div className="mt-6 text-center lg:mt-8">
           <Link
             href="/shows"
-            className="inline-flex items-center gap-1 text-sm font-medium text-blush-600 transition-colors hover:text-blush-700 md:text-base lg:text-lg"
+            className="inline-flex items-center gap-1 text-sm font-medium text-blush-700 transition-colors hover:text-blush-600 md:text-base lg:text-lg"
           >
             {t("allShows")}
           </Link>

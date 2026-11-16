@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { Heart } from "@/components/decorative";
 import { cn } from "@/lib/utils";
 import { submitContactMessage } from "./_submit";
+import { HONEYPOT_STYLE } from "@/lib/honeypot";
 
 /**
  * Tailwind class string for a form input whose validation failed.
@@ -95,13 +96,7 @@ export function ContactForm() {
         autoComplete="off"
         aria-hidden="true"
         {...register("website")}
-        style={{
-          position: "absolute",
-          left: "-9999px",
-          width: "1px",
-          height: "1px",
-          opacity: 0,
-        }}
+        style={HONEYPOT_STYLE}
       />
 
       <Field label={t("formName")} error={errors.name?.message}>
@@ -148,7 +143,7 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-full bg-blush-500 px-6 py-3 font-medium text-white transition-colors hover:bg-blush-600 disabled:opacity-50"
+        className="w-full rounded-full bg-blush-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blush-700 disabled:opacity-50"
       >
         {isSubmitting ? t("formSubmitting") : t("formSubmit")}
       </button>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import {
@@ -60,8 +61,7 @@ function buildVideoFromForm(
 }
 
 function invalidatePublicVideoPaths(): void {
-  revalidatePath("/gallery");
-  revalidatePath("/en/gallery");
+  revalidatePublicSite();
 }
 
 /**

@@ -38,7 +38,7 @@ export function AudioToggle() {
   return (
     <button
       onClick={toggle}
-      className="text-ink-soft/50 hover:text-ink-soft transition-colors"
+      className="-m-2 p-2 text-ink-soft/70 hover:text-ink-soft transition-colors"
       aria-label={muted ? "הפעל צלילים" : "השתק צלילים"}
       title={muted ? "הפעל צלילים" : "השתק צלילים"}
     >

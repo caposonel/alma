@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import {
@@ -49,7 +50,7 @@ function buildLyricFromForm(
 }
 
 function invalidatePublicLyricPaths(slug: string): void {
-  revalidatePath(`/lyrics/${slug}`);
+  revalidatePublicSite();
 }
 
 export async function createLyric(formData: FormData): Promise<void> {
