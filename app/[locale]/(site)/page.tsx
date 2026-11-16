@@ -17,7 +17,7 @@ import { DiaryCard } from "./DiaryCard";
 import { ShowsCard } from "./ShowsCard";
 import { EditableLongText } from "@/components/admin/Editable";
 import { saveHeroDescriptionInline } from "@/app/admin/settings/actions";
-import { getSiteSettings, getUpcomingShows } from "@/lib/content";
+import { getAllDiaryEntries, getSiteSettings, getUpcomingShows } from "@/lib/content";
 import type { Show } from "@/lib/content";
 import { SITE_URL } from "@/lib/config";
 
@@ -65,9 +65,10 @@ export default async function HomePage() {
   const t = await getTranslations("hero");
   const heroLines = [t("line1"), t("line2"), t("line3")];
 
-  const [settings, upcomingShows] = await Promise.all([
+  const [settings, upcomingShows, latestDiary] = await Promise.all([
     getSiteSettings().catch(() => null),
     getUpcomingShows({ limit: 5 }).catch(() => []),
+    getAllDiaryEntries({ limit: 1 }).catch(() => []),
   ]);
 
   const finalHeroLines =
@@ -84,7 +85,7 @@ export default async function HomePage() {
         ctaLabel={t("cta")}
         title={t("title")}
       />
-      <DiaryShowsRow upcoming={upcoming} />
+      <DiaryShowsRow upcoming={upcoming} hasDiary={latestDiary.length > 0} />
     </main>
   );
 }
@@ -212,7 +213,13 @@ function HeroSection({
   );
 }
 
-function DiaryShowsRow({ upcoming }: { upcoming: Show[] }) {
+function DiaryShowsRow({
+  upcoming,
+  hasDiary,
+}: {
+  upcoming: Show[];
+  hasDiary: boolean;
+}) {
   // Real upcoming shows only. When there are none, ShowsCard renders its
   // "no upcoming shows" message (placeholder gigs with example.com ticket
   // links used to appear here).
@@ -231,8 +238,17 @@ function DiaryShowsRow({ upcoming }: { upcoming: Show[] }) {
           a continuation of the same composition rather than a narrower
           afterthought below the big polaroid. */}
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col gap-6 md:flex-row md:gap-10 md:items-stretch lg:gap-14">
-          <DiaryCard />
+        {/* The diary teaser only appears once the diary has real entries
+            (it used to invite visitors to an empty diary). On its own, the
+            shows card is centred at a comfortable reading width. */}
+        <div
+          className={
+            hasDiary
+              ? "flex flex-col gap-6 md:flex-row md:gap-10 md:items-stretch lg:gap-14"
+              : "mx-auto flex max-w-2xl flex-col"
+          }
+        >
+          {hasDiary && <DiaryCard />}
           <ShowsCard shows={showsForCard} />
         </div>
       </div>
