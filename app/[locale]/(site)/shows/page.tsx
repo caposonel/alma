@@ -12,7 +12,9 @@ import { getSettingsAdmin } from "@/lib/admin-store";
 import { readContentOverride } from "@/lib/content-overrides";
 import { getUpcomingShows, getPastShows } from "@/lib/content";
 import type { Show } from "@/lib/content";
-import { SITE_URL } from "@/lib/config";
+import { SITE_URL, SOCIAL_LINKS } from "@/lib/config";
+import { Link } from "@/i18n/navigation";
+import { InstagramIcon } from "@/components/ui/SocialIcons";
 
 export const revalidate = 60;
 
@@ -207,7 +209,7 @@ export default async function ShowsPage() {
               hint="Falls back to the translation file if cleared."
               as="div"
             >
-              <h2 className="mb-4 text-center font-display text-xl text-blush-500">
+              <h2 className="mb-4 text-center font-display text-xl text-blush-700">
                 {upcomingHeading}
               </h2>
             </EditableText>
@@ -311,12 +313,33 @@ export default async function ShowsPage() {
                 <FloatingDoodle intensity={4} duration={5}>
                   <Heart className="mx-auto mb-3 h-5 w-5 opacity-60" />
                 </FloatingDoodle>
-                <p className="text-sm text-ink-soft">
+                <p className="text-base font-medium text-ink">
                   {t("noUpcoming")}
                 </p>
+                {/* Not a dead end: give fans somewhere to go next. */}
+                <p className="mt-2 text-sm text-ink-soft">{t("noUpcomingHint")}</p>
+                <a
+                  href={SOCIAL_LINKS.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-blush-200 bg-paper px-5 text-base text-ink transition-colors hover:border-blush-400 hover:text-blush-700"
+                >
+                  <InstagramIcon className="h-5 w-5" />
+                  {t("followInstagram")}
+                </a>
               </TicketStub>
             </ScrollReveal>
           )}
+
+          {/* Booking path for venues and promoters. */}
+          <p className="mt-6 text-center">
+            <Link
+              href="/contact"
+              className="inline-flex min-h-11 items-center text-base font-medium text-blush-700 underline decoration-blush-300 underline-offset-4 hover:decoration-blush-700"
+            >
+              {t("bookCta")}
+            </Link>
+          </p>
         </section>
 
         {/* Past shows + interactive map */}

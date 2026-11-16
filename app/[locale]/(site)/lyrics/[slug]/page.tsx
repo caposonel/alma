@@ -142,7 +142,7 @@ export default async function LyricsPage({ params }: Props) {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-12 mx-auto max-w-5xl"
       >
-        <div className="absolute start-8 top-4">
+        <div className="absolute start-8 top-28">
           <ParallaxLayer speed={-0.1}>
             <FloatingDoodle intensity={6} duration={5}>
               <Heart className="h-6 w-6 opacity-50" />
@@ -175,14 +175,14 @@ export default async function LyricsPage({ params }: Props) {
       <article className="relative mx-auto max-w-5xl">
         <Link
           href="/music"
-          className="mb-8 inline-block text-sm text-blush-500 transition-colors hover:text-blush-600"
+          className="mb-6 inline-flex min-h-11 items-center text-base font-medium text-blush-700 transition-colors hover:text-blush-600"
         >
           {t("backToMusic")}
         </Link>
 
         <ScrollReveal>
           <header className="mb-10 text-center">
-            <p className="text-xs uppercase tracking-wider text-blush-500">
+            <p className="text-sm font-medium tracking-wide text-blush-700">
               {lyric.releaseTitle}
               {releaseDateLabel && (
                 <span className="ms-2 text-ink-soft normal-case">
@@ -194,6 +194,17 @@ export default async function LyricsPage({ params }: Props) {
               <HandwrittenUnderline>{lyric.titleHe}</HandwrittenUnderline>
               <Heart className="ms-2 inline-block h-5 w-5" />
             </h1>
+            {spotifyUrl && (
+              <a
+                href={spotifyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-blush-200 bg-white px-5 text-base text-ink shadow-sm transition-colors hover:border-blush-400 hover:text-blush-700"
+              >
+                <SpotifyIcon className="h-5 w-5" />
+                <span>{t("listenToSong")}</span>
+              </a>
+            )}
           </header>
         </ScrollReveal>
 
@@ -209,8 +220,10 @@ export default async function LyricsPage({ params }: Props) {
                   <LyricsReveal
                     text={stripLrcTimestamps(lyric.lyricsHe)}
                     dir="rtl"
-                    className="whitespace-pre-wrap font-display text-2xl leading-[48px] text-ink md:text-3xl md:leading-[48px]"
-                    style={{ fontFamily: "var(--font-display)" }}
+                    // Body font, like the music page's lyrics card: the
+                    // handwritten face was hard to read for a whole song.
+                    // Line height matches the 48px notebook rules.
+                    className="whitespace-pre-wrap text-xl font-medium leading-[48px] text-ink md:text-[22px]"
                   />
                 </NotebookLines>
               </div>
@@ -226,7 +239,7 @@ export default async function LyricsPage({ params }: Props) {
                 href={spotifyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-blush-200 bg-white px-4 py-2.5 text-sm text-ink-soft shadow-sm transition-all hover:border-blush-400 hover:text-[#1DB954] hover:shadow-md"
+                className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-blush-200 bg-white px-5 text-base text-ink shadow-sm transition-all hover:border-blush-400 hover:text-blush-700 hover:shadow-md"
               >
                 <SpotifyIcon className="h-5 w-5" />
                 <span>{t("listenToSong")}</span>

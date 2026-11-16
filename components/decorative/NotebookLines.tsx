@@ -37,8 +37,10 @@ export function NotebookLines({
     // Optional margin line
     ...(showMargin
       ? [
+          // Margin rule on the right-hand side, like a Hebrew notebook
+          // (it used to sit on the left, where RTL text runs into it).
           `linear-gradient(
-            to left,
+            to right,
             transparent calc(100% - 60px),
             rgba(220, 100, 100, 0.2) calc(100% - 60px),
             rgba(220, 100, 100, 0.2) calc(100% - 59px),

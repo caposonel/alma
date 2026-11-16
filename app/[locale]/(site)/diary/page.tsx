@@ -126,7 +126,7 @@ export default async function DiaryPage() {
               hint="Falls back to the translation file if cleared."
               as="div"
             >
-              <p className="mt-2 font-display text-sm text-blush-400 md:text-base">
+              <p className="mt-2 font-display text-xl text-blush-700 md:text-2xl">
                 {diaryPersonality}
                 <Daisy className="ms-1 inline-block h-4 w-4 opacity-50" />
               </p>
@@ -217,7 +217,7 @@ function DiaryCard({
     </EditableImage>
   );
   const titleNode = isPlaceholder ? (
-    <h2 className="mt-1 font-display text-lg text-ink group-hover:text-blush-500 transition-colors">
+    <h2 className="mt-1 font-display text-xl text-ink group-hover:text-blush-500 transition-colors">
       {entry.title}
     </h2>
   ) : (
@@ -228,7 +228,7 @@ function DiaryCard({
       save={patchDiaryFieldInline.bind(null, entry._id, "title")}
       as="div"
     >
-      <h2 className="mt-1 font-display text-lg text-ink group-hover:text-blush-500 transition-colors">
+      <h2 className="mt-1 font-display text-xl text-ink group-hover:text-blush-500 transition-colors">
         {entry.title}
       </h2>
     </EditableText>

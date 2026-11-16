@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -142,9 +142,12 @@ export function Header({ storeUrl, showDiary = true }: HeaderProps) {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={className}
+                    className={cn(className, "inline-flex items-center gap-1")}
                   >
                     {content}
+                    {/* Leaves the site (Bandcamp store) */}
+                    <ExternalLink className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                    <span className="sr-only">(נפתח באתר חיצוני)</span>
                   </a>
                 );
               }
@@ -185,6 +188,15 @@ export function Header({ storeUrl, showDiary = true }: HeaderProps) {
                 className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
               >
                 <YoutubeIcon className="h-5 w-5" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.bandcamp}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Bandcamp"
+                className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
+              >
+                <BandcampIcon className="h-5 w-5" />
               </a>
             </div>
             {/* WCAG 2.5.5 wants 44×44px minimum hit-box on touch.
@@ -295,9 +307,11 @@ export function Header({ storeUrl, showDiary = true }: HeaderProps) {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={className}
+                  className={cn(className, "inline-flex items-center gap-1.5")}
                 >
                   {label}
+                  <ExternalLink className="h-4 w-4 opacity-70" aria-hidden="true" />
+                  <span className="sr-only">(נפתח באתר חיצוני)</span>
                 </a>
               ) : (
                 <Link key={link.href} href={link.href} className={className}>

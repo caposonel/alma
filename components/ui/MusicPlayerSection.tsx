@@ -11,6 +11,7 @@ import { AlbumDiscography, type DiscographyAlbum } from "./AlbumDiscography";
 import { useMusicPlayer } from "@/lib/music-player-context";
 import type { AdminLyric } from "@/lib/admin-store";
 import { looksLikeLRC, parseLRC } from "@/lib/lrclib";
+import Link from "next/link";
 
 /* Karaoke comes from the admin store ONLY.
  *
@@ -189,6 +190,24 @@ export function MusicPlayerSection({
     });
   }, []);
 
+  /* Deep link from the homepage "חדש" card: /music#play=<youtubeId> selects
+   * that track (queued until the player is ready). A hash keeps the page
+   * statically cacheable, unlike a query string. */
+  useEffect(() => {
+    const applyHash = () => {
+      const m = /^#play=([\w-]{6,20})$/.exec(window.location.hash);
+      if (!m) return;
+      const track = adminLyrics.find((l) => l.youtubeId === m[1]);
+      if (track) handleSelectTrack(track);
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    };
+    applyHash();
+    // Also when only the hash changes (link followed while already here).
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* Throttle position updates to ~16x/sec (60ms). The IFrame API itself
    * emits at roughly 100-150ms intervals, so 60ms is faster than the
    * upstream — effectively NO drops — while still giving React headroom
@@ -283,6 +302,16 @@ export function MusicPlayerSection({
             durationMs={currentDurationMs}
             syncedLines={adminSyncedLines!}
           />
+          {matched?.slug && (
+            <p className="mt-4 text-center">
+              <Link
+                href={`/lyrics/${encodeURIComponent(matched.slug)}`}
+                className="inline-flex min-h-11 items-center text-base font-medium text-blush-700 underline decoration-blush-300 underline-offset-4 hover:decoration-blush-700"
+              >
+                למילים המלאות »
+              </Link>
+            </p>
+          )}
         </div>
       )}
 

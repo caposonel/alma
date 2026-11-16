@@ -139,7 +139,7 @@ export function StickerSheet() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-display text-lg text-ink">מדבקות ✨</h3>
+              <h3 className="font-display text-xl text-ink">מדבקות ✨</h3>
               <div className="flex items-center gap-2">
                 {placements.length > 0 && (
                   <button

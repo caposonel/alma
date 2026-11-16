@@ -330,10 +330,12 @@ export default async function AboutPage() {
             {influences.map((inf, i) => (
               <StaggerItem key={`${inf.name}-${i}`}>
                 <div className="group relative rounded-sm border border-blush-100 bg-paper-warm p-4 text-center transition-shadow hover:shadow-sm">
-                  <span className="mb-2 block text-2xl" role="img" aria-hidden="true">
-                    {inf.icon}
+                  {/* Hand-drawn doodle instead of a system emoji (emoji
+                      clashed with the site's line-drawn style). */}
+                  <span className="mb-2 flex justify-center text-blush-600" aria-hidden="true">
+                    <InfluenceDoodle icon={inf.icon} index={i} />
                   </span>
-                  <span className="text-sm font-medium text-ink" dir="auto">{inf.name}</span>
+                  <span className="text-base font-medium text-ink" dir="auto">{inf.name}</span>
                   {/* Decorative corner doodle */}
                   <Star className="absolute -top-1.5 -end-1.5 h-3 w-3 opacity-0 transition-opacity group-hover:opacity-40" />
                 </div>
@@ -399,3 +401,26 @@ export default async function AboutPage() {
   );
 }
 
+/** Maps an influence's emoji to the nearest hand-drawn doodle. */
+function InfluenceDoodle({ icon, index }: { icon?: string; index: number }) {
+  const byEmoji: Record<string, React.ReactNode> = {
+    "🎵": <MusicNote className="h-7 w-6" />,
+    "🎶": <MusicNote className="h-7 w-6" />,
+    "🎸": <Guitar className="h-8 w-4" />,
+    "⭐": <Star className="h-7 w-7" />,
+    "🌙": <Star className="h-7 w-7" />,
+    "❤️": <Heart className="h-7 w-7" />,
+    "🌼": <Daisy className="h-7 w-7" />,
+    "🦋": <Butterfly className="h-7 w-8" />,
+  };
+  if (icon && byEmoji[icon]) return <>{byEmoji[icon]}</>;
+  const cycle = [
+    <MusicNote key="n" className="h-7 w-6" />,
+    <Star key="s" className="h-7 w-7" />,
+    <Guitar key="g" className="h-8 w-4" />,
+    <Heart key="h" className="h-7 w-7" />,
+    <Daisy key="d" className="h-7 w-7" />,
+    <Butterfly key="b" className="h-7 w-8" />,
+  ];
+  return cycle[index % cycle.length];
+}

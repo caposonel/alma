@@ -14,9 +14,11 @@ const heebo = Heebo({
   display: "swap",
 });
 
+// Only the bold weight: the thin 400 was hard to read at small sizes, and
+// with a single weight loaded every handwritten heading/label renders bold.
 const amaticSC = Amatic_SC({
   subsets: ["hebrew", "latin"],
-  weight: ["400", "700"],
+  weight: ["700"],
   variable: "--font-handwritten",
   display: "swap",
 });

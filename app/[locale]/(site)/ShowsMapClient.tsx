@@ -74,7 +74,7 @@ export function ShowsMapClient({ shows }: { shows: ShowData[] }) {
     >
       {/* Past shows list */}
       <div className="flex-1">
-        <h3 className="mb-4 text-center font-display text-lg text-ink-soft md:text-start">
+        <h3 className="mb-4 text-center font-display text-xl text-ink-soft md:text-start">
           הופעות שעברו
         </h3>
         <div className="space-y-2">
@@ -83,7 +83,7 @@ export function ShowsMapClient({ shows }: { shows: ShowData[] }) {
               <button
                 type="button"
                 onClick={() => toggleRow(show)}
-                className={`flex w-full items-center justify-between gap-4 border-b border-blush-100 py-3 text-sm transition-colors text-start ${
+                className={`flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-blush-100 py-3 text-sm transition-colors text-start sm:flex-nowrap ${
                   highlightCity === show.city
                     ? "bg-blush-50/60 text-ink"
                     : "text-ink-soft hover:bg-blush-50/30"
@@ -100,7 +100,9 @@ export function ShowsMapClient({ shows }: { shows: ShowData[] }) {
                   {show.city}, {show.venue}
                 </span>
                 {(show.title || show.notes) && (
-                  <span className="hidden text-xs opacity-60 sm:inline">
+                  // Shown on phones too (it used to be hidden there), on its
+                  // own line under the venue.
+                  <span className="basis-full text-xs text-ink-soft sm:basis-auto">
                     {show.title || show.notes}
                   </span>
                 )}

@@ -424,13 +424,19 @@ function VideoSection({
                 <Star className="h-4 w-4" variant="filled" />
               </div>
             </ScrollReveal>
+            {/* A lone video is centred instead of leaving an empty column.
+                No per-card category chip: the section heading already says it. */}
             <StaggerGrid
-              className="grid grid-cols-1 gap-6 md:grid-cols-2"
+              className={
+                list.length === 1
+                  ? "mx-auto grid max-w-xl grid-cols-1 gap-6"
+                  : "grid grid-cols-1 gap-6 md:grid-cols-2"
+              }
               staggerDelay={0.12}
             >
               {list.map((video) => (
                 <StaggerItem key={video.id}>
-                  <VideoCard video={video} categoryLabel={video.category ? labelForCategory(video.category) : undefined} />
+                  <VideoCard video={video} />
                 </StaggerItem>
               ))}
             </StaggerGrid>
@@ -458,16 +464,16 @@ function VideoCard({
         <YouTubeCard youtubeId={video.youtubeId} title={video.title} />
       </div>
       <div className="mt-2 flex flex-wrap items-baseline gap-2">
-        <p className="font-display text-lg text-ink">{video.title}</p>
+        <p className="font-display text-2xl leading-tight text-ink">{video.title}</p>
         {categoryLabel && (
           <span className="inline-block rounded-full bg-paper px-2 py-0.5 text-xs text-ink-soft ring-1 ring-ink/10">
             {categoryLabel}
           </span>
         )}
       </div>
-      {releaseLabel && <p className="mt-1 text-xs text-ink-soft">{releaseLabel}</p>}
+      {releaseLabel && <p className="mt-1 text-sm text-ink-soft">{releaseLabel}</p>}
       {video.description && (
-        <p className="mt-1 text-sm text-ink-soft">{video.description}</p>
+        <p className="mt-1 text-base text-ink-soft">{video.description}</p>
       )}
     </div>
   );

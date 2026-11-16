@@ -38,8 +38,10 @@ export function AudioToggle() {
   return (
     <button
       onClick={toggle}
-      className="-m-2 p-2 text-ink-soft/70 hover:text-ink-soft transition-colors"
+      // Visible label: the bare speaker icon wasn't self-explanatory.
+      className="-my-2 inline-flex min-h-11 items-center gap-1.5 px-2 text-sm text-ink-soft transition-colors hover:text-ink"
       aria-label={muted ? "הפעל צלילים" : "השתק צלילים"}
+      aria-pressed={!muted}
       title={muted ? "הפעל צלילים" : "השתק צלילים"}
     >
       {muted ? (
@@ -93,6 +95,7 @@ export function AudioToggle() {
           />
         </svg>
       )}
+      <span aria-hidden="true">צלילים</span>
     </button>
   );
 }

@@ -99,41 +99,30 @@ export default async function ContactPage() {
       {/* ── Two-column layout ── */}
       <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-10 md:grid-cols-5 md:gap-14">
         {/* ─── Left column: info + social + decorative ─── */}
-        <div className="order-2 flex flex-col gap-8 md:order-1 md:col-span-2">
+        {/* On phones this column comes first, so bookers see the email
+            without scrolling past the whole form. */}
+        <div className="order-1 flex flex-col gap-8 md:col-span-2">
           {/* Contact info cards */}
           <ScrollReveal direction="right">
             <div className="space-y-4">
-              {/* Email card */}
-              <div className="rounded-lg border border-blush-200 bg-paper-warm p-5 shadow-sm transition-shadow hover:shadow-md">
-                <div className="mb-2 flex items-center gap-2">
-                  <Heart className="h-4 w-4" />
-                  <h3 className="text-base font-semibold text-ink">
-                    {t("infoGeneralEmail")}
-                  </h3>
-                </div>
-                <a
-                  href="mailto:almagov.music@gmail.com"
-                  dir="ltr"
-                  className="text-sm text-blush-700 underline decoration-blush-300 underline-offset-2 transition-colors hover:text-blush-600"
-                >
-                  almagov.music@gmail.com
-                </a>
-              </div>
-
-              {/* Booking card */}
+              {/* One card for bookings and everything else (there used to be
+                  two cards showing the same address). */}
               <div className="rounded-lg border border-blush-200 bg-paper-warm p-5 shadow-sm transition-shadow hover:shadow-md">
                 <div className="mb-2 flex items-center gap-2">
                   <Guitar className="h-5 w-3" />
-                  <h3 className="text-base font-semibold text-ink">
-                    {t("infoBookingEmail")}
-                  </h3>
+                  <h2 className="text-lg font-semibold text-ink">
+                    {t("infoBookingAndGeneral")}
+                  </h2>
                 </div>
+                <p dir="ltr" className="text-end text-base text-ink">
+                  almagov.music@gmail.com
+                </p>
                 <a
                   href="mailto:almagov.music@gmail.com"
-                  dir="ltr"
-                  className="text-sm text-blush-700 underline decoration-blush-300 underline-offset-2 transition-colors hover:text-blush-600"
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-blush-600 px-5 text-base font-medium text-white transition-colors hover:bg-blush-700"
                 >
-                  almagov.music@gmail.com
+                  <Heart className="h-4 w-4 text-white" />
+                  {t("infoSendEmail")}
                 </a>
               </div>
             </div>
@@ -152,7 +141,7 @@ export default async function ContactPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-blush-100 text-blush-500 transition-colors hover:bg-blush-200 hover:text-blush-600"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-blush-100 text-blush-700 transition-colors hover:bg-blush-200 hover:text-blush-600"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -174,7 +163,7 @@ export default async function ContactPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Spotify"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-blush-100 text-blush-500 transition-colors hover:bg-blush-200 hover:text-blush-600"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-blush-100 text-blush-700 transition-colors hover:bg-blush-200 hover:text-blush-600"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -190,7 +179,7 @@ export default async function ContactPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="YouTube"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-blush-100 text-blush-500 transition-colors hover:bg-blush-200 hover:text-blush-600"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-blush-100 text-blush-700 transition-colors hover:bg-blush-200 hover:text-blush-600"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -206,7 +195,7 @@ export default async function ContactPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Bandcamp"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-blush-100 text-blush-500 transition-colors hover:bg-blush-200 hover:text-blush-600"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-blush-100 text-blush-700 transition-colors hover:bg-blush-200 hover:text-blush-600"
                 >
                   <BandcampIcon className="h-5 w-5" />
                 </a>
@@ -231,7 +220,7 @@ export default async function ContactPage() {
         </div>
 
         {/* ─── Right column: form ─── */}
-        <div className="order-1 md:order-2 md:col-span-3">
+        <div className="order-2 md:col-span-3">
           <ScrollReveal delay={0.15}>
             <NotebookLines
               className="rounded-lg bg-paper-warm p-6 shadow-sm md:p-8"

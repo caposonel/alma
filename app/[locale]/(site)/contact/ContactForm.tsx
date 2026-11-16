@@ -96,7 +96,7 @@ export function ContactForm() {
     return (
       <div className="py-8 text-center">
         <Heart className="mx-auto mb-4 h-6 w-6" />
-        <p className="font-display text-xl text-blush-500">{t("formThanks")}</p>
+        <p className="font-display text-xl text-blush-700">{t("formThanks")}</p>
         <p className="mt-2 text-sm text-ink-soft">
           {t("formThanksDetail")}
         </p>

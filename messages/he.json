@@ -60,7 +60,10 @@
     "soldOut": "אזל",
     "comingSoon": "בקרוב",
     "noUpcomingTitle": "הופעות חדשות בקרוב",
-    "noUpcoming": "הופעות חדשות בקרוב"
+    "noUpcoming": "הופעות חדשות בקרוב",
+    "noUpcomingHint": "רוצים לשמוע ראשונים? עקבו באינסטגרם או הצטרפו לרשימת המכתבים למטה.",
+    "followInstagram": "לאינסטגרם",
+    "bookCta": "רוצים להזמין הופעה? לפרטים »"
   },
   "gallery": {
     "title": "גלריה",
@@ -122,7 +125,9 @@
     "infoBookingEmail": "הזמנות להופעות",
     "infoFollow": "עקבו אחריי",
     "formErrorTooLong": "הטקסט ארוך מדי",
-    "formErrorMessageTooLong": "ההודעה ארוכה מדי (עד 5,000 תווים)"
+    "formErrorMessageTooLong": "ההודעה ארוכה מדי (עד 5,000 תווים)",
+    "infoBookingAndGeneral": "להזמנת הופעות ולכל פנייה",
+    "infoSendEmail": "שליחת מייל"
   },
   "footer": {
     "tagline": "מילים, שירים, ושום שיגעון",
@@ -150,7 +155,7 @@
     "prompt": "רוצים לקבל מכתבים כשיש חדשים?",
     "sideTextStart": "תודה שאתם פה",
     "sideTextEnd": "מילים סודות אצלי בשבילך",
-    "emailPlaceholder": "כתובת אימייל",
+    "emailPlaceholder": "אימייל למכתבים",
     "submit": "להצטרפות",
     "submitting": "שולח...",
     "thanks": "תודה! נוסיף אותך לרשימה.",

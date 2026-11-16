@@ -229,7 +229,8 @@ export function LyricScroll({
           "repeating-linear-gradient(transparent, transparent 27px, rgba(229, 160, 160, 0.12) 27px, rgba(229, 160, 160, 0.12) 28px)",
       }}
     >
-      <div className="absolute top-0 bottom-0 end-12 w-px bg-blush-200/40" />
+      {/* Notebook margin rule on the right (start) side, as in Hebrew. */}
+      <div className="absolute top-0 bottom-0 start-5 w-px bg-blush-200/40 md:start-8" />
       <h3 className="mb-8 text-center font-display text-3xl text-ink">
         {title}
       </h3>
@@ -248,7 +249,9 @@ export function LyricScroll({
         className={cn(
           "relative text-center",
           hasSynced
-            ? "h-[50vh] min-h-[400px] overflow-hidden"
+            ? // Shorter on phones (~7 lines) so the song list isn't pushed
+              // screens down; the full text is a tap away ("למילים המלאות").
+              "h-[36vh] min-h-[280px] overflow-hidden md:h-[50vh] md:min-h-[400px]"
             : "overflow-visible"
         )}
         style={

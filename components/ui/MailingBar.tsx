@@ -207,7 +207,7 @@ export function MailingBar() {
               type="button"
               onClick={() => persistDismissed(true)}
               aria-label={t("closeLabel")}
-              className="absolute top-0 end-0 rounded-full p-3 text-ink-soft transition-colors hover:bg-blush-100 hover:text-blush-500"
+              className="absolute top-0 end-0 rounded-full p-3.5 text-ink-soft transition-colors hover:bg-blush-100 hover:text-blush-700"
             >
               <X className="h-4 w-4" />
             </button>
@@ -263,7 +263,7 @@ export function MailingBar() {
               {/* Center: prompt + inline form (or thank-you message) */}
               <div className="flex flex-1 items-center justify-center">
                 {submitted ? (
-                  <p className="font-display text-base text-blush-700">
+                  <p className="font-display text-xl text-blush-700">
                     {t("thanks")}
                   </p>
                 ) : (
@@ -456,7 +456,7 @@ function MiniPlayer({
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <p className="truncate text-sm">
-            <span className="font-display text-ink-soft me-1.5 text-xs uppercase tracking-wider">
+            <span className="font-display text-ink-soft me-1.5 text-xl uppercase tracking-wider">
               {nowPlayingLabel}
             </span>
             <span className="font-medium text-ink">{title}</span>

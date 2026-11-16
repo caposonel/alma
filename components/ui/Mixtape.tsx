@@ -76,7 +76,7 @@ export function Mixtape({
       <div
         className={cn(
           "relative grid gap-6 rounded-md border-2 border-dashed border-blush-200",
-          "bg-paper-warm p-6 shadow-lg paper-fold md:grid-cols-2 md:gap-10 md:p-8"
+          "bg-paper-warm p-6 shadow-lg md:grid-cols-2 md:gap-10 md:p-8"
         )}
       >
         {/* ───────── LEFT PANEL (visual RIGHT in RTL) — the "cover" ───────── */}
@@ -93,7 +93,7 @@ export function Mixtape({
               <Heart className="ms-2 inline-block h-5 w-5 align-baseline" />
             </h2>
             {subtitle && (
-              <p className="mt-3 font-display text-lg text-ink-soft">
+              <p className="mt-3 font-display text-xl text-ink-soft">
                 {subtitle}
               </p>
             )}
@@ -108,7 +108,7 @@ export function Mixtape({
 
           {/* Bottom "Mixtape" label */}
           {playlistLabel && (
-            <p className="font-display text-sm uppercase tracking-widest text-blush-400">
+            <p className="font-display text-xl uppercase tracking-widest text-blush-700">
               {playlistLabel}
             </p>
           )}
@@ -126,7 +126,7 @@ export function Mixtape({
               const rowInner = (
                 <>
                   {/* Track number — sits at the start (visual right in RTL) */}
-                  <span className="me-3 inline-block w-6 shrink-0 font-display text-base text-blush-400">
+                  <span className="me-3 inline-block w-6 shrink-0 font-display text-xl text-blush-700">
                     {i + 1}.
                   </span>
                   {/* Title takes remaining space */}
@@ -154,7 +154,7 @@ export function Mixtape({
                       rel="noopener noreferrer"
                       className={cn(
                         rowClasses,
-                        "hover:text-blush-500 [&:hover_span]:text-blush-500"
+                        "hover:text-blush-700 [&:hover_span]:text-blush-700"
                       )}
                     >
                       {rowInner}
@@ -175,7 +175,7 @@ export function Mixtape({
           className="absolute -bottom-4 end-4 max-w-[60%] -rotate-3 rounded-sm bg-white px-3 py-2 shadow-md md:max-w-[40%]"
           aria-label="handwritten note"
         >
-          <p className="font-display text-base font-medium leading-snug text-ink md:text-lg">
+          <p className="font-display text-xl font-medium leading-snug text-ink md:text-2xl">
             {note}
           </p>
         </div>

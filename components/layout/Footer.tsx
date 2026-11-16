@@ -7,6 +7,7 @@ import {
   InstagramIcon,
   SpotifyIcon,
   YoutubeIcon,
+  BandcampIcon,
 } from "@/components/ui/SocialIcons";
 import { AudioToggle } from "@/components/ui/AudioToggle";
 import { SOCIAL_LINKS } from "@/lib/config";
@@ -69,6 +70,15 @@ export function Footer() {
               className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
             >
               <YoutubeIcon className="h-5 w-5" />
+            </a>
+            <a
+              href={SOCIAL_LINKS.bandcamp}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Bandcamp"
+              className="-m-1.5 p-1.5 text-ink-soft transition-colors hover:text-blush-500"
+            >
+              <BandcampIcon className="h-5 w-5" />
             </a>
           </div>
         </div>

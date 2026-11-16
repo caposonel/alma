@@ -37,7 +37,7 @@ export async function DiaryCard() {
               className="absolute -bottom-3 -start-2 max-w-[160px] rounded-sm bg-white px-3 py-2 shadow-sm md:-bottom-5 md:-start-4 md:max-w-[200px] lg:-bottom-6 lg:-start-5 lg:max-w-[240px]"
               style={{ transform: "rotate(-6deg)" }}
             >
-              <p className="font-display text-base leading-snug text-ink md:text-lg lg:text-xl">
+              <p className="font-display text-xl leading-snug text-ink md:text-2xl lg:text-2xl">
                 {t("stickyNote")}
               </p>
             </div>

@@ -131,7 +131,7 @@ export function PolaroidFrame({
         )}
       </div>
       {caption && !hasFlip && (
-        <p className="absolute bottom-3 start-0 end-0 text-center font-display text-sm text-ink-soft">
+        <p className="absolute bottom-3 start-0 end-0 text-center font-display text-xl text-ink-soft">
           {caption}
         </p>
       )}

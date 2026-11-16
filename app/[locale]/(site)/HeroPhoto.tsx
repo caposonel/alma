@@ -38,14 +38,14 @@ export function HeroPhoto({ title }: { title: string }) {
         priority
         width={720}
         height={405}
-        className="w-80"
+        className="w-72"
       />
     );
   }
 
   return (
     <div
-      className="relative w-[44rem] lg:w-[60rem]"
+      className="relative w-[26rem] lg:w-[36rem] xl:w-[48rem] 2xl:w-[56rem]"
       style={{ transform: "rotate(-2.5deg)" }}
     >
       <div className="overflow-hidden rounded-sm bg-white p-3 pb-6 shadow-lg">

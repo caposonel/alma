@@ -31,9 +31,9 @@ type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-blush-600 text-white rounded-md hover:bg-blush-700 transition-colors shadow-sm",
+    "bg-blush-600 text-white rounded-full hover:bg-blush-700 transition-colors shadow-sm",
   ghost:
-    "bg-transparent text-ink hover:bg-blush-50 rounded-md border border-blush-200 transition-colors",
+    "bg-transparent text-ink hover:bg-blush-50 rounded-full border border-blush-200 transition-colors",
   link: "bg-transparent text-blush-700 hover:text-blush-600 underline-offset-4 hover:underline transition-colors",
 };
 

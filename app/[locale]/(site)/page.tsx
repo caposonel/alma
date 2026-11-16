@@ -18,6 +18,10 @@ import { ShowsCard } from "./ShowsCard";
 import { EditableLongText } from "@/components/admin/Editable";
 import { saveHeroDescriptionInline } from "@/app/admin/settings/actions";
 import { getAllDiaryEntries, getSiteSettings, getUpcomingShows } from "@/lib/content";
+import { getAdminLyrics } from "@/lib/admin-store";
+import { buildAlbumDiscography } from "@/lib/discography";
+import type { DiscographyAlbum } from "@/components/ui/AlbumDiscography";
+import { NewReleaseCard } from "./NewReleaseCard";
 import type { Show } from "@/lib/content";
 import { SITE_URL } from "@/lib/config";
 
@@ -65,11 +69,15 @@ export default async function HomePage() {
   const t = await getTranslations("hero");
   const heroLines = [t("line1"), t("line2"), t("line3")];
 
-  const [settings, upcomingShows, latestDiary] = await Promise.all([
+  const [settings, upcomingShows, latestDiary, adminLyrics] = await Promise.all([
     getSiteSettings().catch(() => null),
     getUpcomingShows({ limit: 5 }).catch(() => []),
     getAllDiaryEntries({ limit: 1 }).catch(() => []),
+    getAdminLyrics().catch(() => []),
   ]);
+  // Newest release (by release date) for the "חדש" card.
+  const latestRelease =
+    (await buildAlbumDiscography(adminLyrics).catch(() => []))[0] ?? null;
 
   const finalHeroLines =
     settings?.heroDescription?.length === 3
@@ -85,7 +93,11 @@ export default async function HomePage() {
         ctaLabel={t("cta")}
         title={t("title")}
       />
-      <DiaryShowsRow upcoming={upcoming} hasDiary={latestDiary.length > 0} />
+      <DiaryShowsRow
+        upcoming={upcoming}
+        hasDiary={latestDiary.length > 0}
+        latestRelease={latestRelease}
+      />
     </main>
   );
 }
@@ -115,15 +127,15 @@ function HeroSection({
     </EditableLongText>
   );
   return (
-    <section className="relative overflow-hidden px-6 pt-8 pb-10 md:px-10 md:pt-12 md:pb-14 lg:px-14">
+    <section className="relative overflow-hidden px-6 pt-4 pb-10 md:px-10 md:pt-12 md:pb-14 lg:px-14">
       <DoodleScatter seed="hero" className="opacity-30" />
       {/* max-w-7xl (1280px) + larger horizontal padding pushes the photo
           and title genuinely toward the side edges of the viewport, as
           in the mockup. Smaller gap so the photo and title don't get
           re-centered into the middle by an over-wide gutter. */}
-      <div className="mx-auto flex max-w-7xl flex-col-reverse items-center gap-8 md:flex-row md:gap-8 lg:gap-12">
+      <div className="mx-auto flex max-w-7xl flex-col-reverse items-center gap-5 md:flex-row md:gap-8 lg:gap-12">
         {/* Text — left in RTL */}
-        <div className="relative flex-1 text-center md:text-start">
+        <div className="relative flex-1 text-center md:min-w-[18rem] md:text-start lg:min-w-[22rem]">
           <FloatingDoodle className="absolute -top-4 end-8 hidden md:block" intensity={6} duration={5}>
             <Heart className="h-5 w-5 opacity-50 rotate-12" />
           </FloatingDoodle>
@@ -132,7 +144,7 @@ function HeroSection({
           </FloatingDoodle>
 
           <HeroAnimations>
-            <h1 className="font-display text-6xl font-bold leading-tight text-ink md:text-8xl flex items-center justify-center md:justify-start gap-3">
+            <h1 className="font-display text-6xl font-bold leading-tight text-ink md:text-8xl flex items-center justify-center whitespace-nowrap md:justify-start gap-3">
               <Heart className="h-8 w-8 md:h-10 md:w-10 -rotate-12" />
               <HandwrittenUnderline>{title}</HandwrittenUnderline>
             </h1>
@@ -163,7 +175,7 @@ function HeroSection({
             <Butterfly className="h-7 w-8 opacity-50 -rotate-6" />
           </FloatingDoodle>
 
-          <div className="mt-8">
+          <div className="mt-6 md:mt-8">
             <HeroPulseButton>
               <MagneticElement strength={0.18}>
                 <Button href="/music" size="lg">{ctaLabel}</Button>
@@ -216,9 +228,11 @@ function HeroSection({
 function DiaryShowsRow({
   upcoming,
   hasDiary,
+  latestRelease,
 }: {
   upcoming: Show[];
   hasDiary: boolean;
+  latestRelease: DiscographyAlbum | null;
 }) {
   // Real upcoming shows only. When there are none, ShowsCard renders its
   // "no upcoming shows" message (placeholder gigs with example.com ticket
@@ -238,18 +252,22 @@ function DiaryShowsRow({
           a continuation of the same composition rather than a narrower
           afterthought below the big polaroid. */}
       <div className="mx-auto max-w-7xl">
-        {/* The diary teaser only appears once the diary has real entries
-            (it used to invite visitors to an empty diary). On its own, the
-            shows card is centred at a comfortable reading width. */}
+        {/* Cards below the hero: the newest release always (when there's
+            music data), upcoming shows only when there are any, and the
+            diary teaser only once the diary has entries. Empty states used
+            to fill this space ("no upcoming shows", an empty diary). A
+            single card is centred at a comfortable width. */}
         <div
           className={
-            hasDiary
+            [latestRelease, showsForCard.length > 0, hasDiary].filter(Boolean)
+              .length > 1
               ? "flex flex-col gap-6 md:flex-row md:gap-10 md:items-stretch lg:gap-14"
               : "mx-auto flex max-w-2xl flex-col"
           }
         >
+          {latestRelease && <NewReleaseCard album={latestRelease} />}
+          {showsForCard.length > 0 && <ShowsCard shows={showsForCard} />}
           {hasDiary && <DiaryCard />}
-          <ShowsCard shows={showsForCard} />
         </div>
       </div>
     </section>

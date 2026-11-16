@@ -137,7 +137,7 @@ function AlbumCard({
         )}
 
         {/* Track list — numbered, clickable, currently-playing track is highlighted */}
-        <ul className="mt-4 space-y-1">
+        <ul className="mt-4 space-y-0.5">
           {album.tracks.map((track, i) => {
             const title = track.titleHe;
             // The player runs on YouTube, so `currentTrackId` is a video id.
@@ -145,59 +145,66 @@ function AlbumCard({
               !!track.youtubeId && track.youtubeId === currentTrackId;
             const spotifyOnly = !track.youtubeId && !!track.spotifyTrackId;
             return (
-              <li key={track.slug} className="flex items-center gap-1">
+              <li key={track.slug} className="flex min-h-11 items-center gap-1">
+                {/* Rows hug their content so "מילים" sits right after the
+                    song title (it used to be pushed to the far edge). */}
                 {spotifyOnly ? (
                   <a
                     href={`https://open.spotify.com/track/${track.spotifyTrackId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-3 py-2 text-start text-sm text-ink transition-colors hover:bg-blush-50 hover:text-blush-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
+                    className="flex min-h-11 min-w-0 items-center gap-3 rounded-md px-3 text-start text-base text-ink transition-colors hover:bg-blush-50 hover:text-blush-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
                   >
-                    <span className="w-6 text-xs tabular-nums text-blush-300">
+                    <span className="w-6 shrink-0 text-sm tabular-nums text-ink-soft">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="flex-1 truncate font-medium">{title}</span>
                     <SpotifyIcon className="h-4 w-4 shrink-0 text-ink-soft" />
-                    <span className="sr-only">(Spotify)</span>
+                    <span className="truncate font-medium">{title}</span>
+                    <span className="shrink-0 text-sm text-ink-soft">ב-Spotify ↗</span>
                   </a>
                 ) : (
                 <motion.button
                   type="button"
                   onClick={() => onSelectTrack(track)}
-                  whileHover={{ x: 2 }}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "flex min-w-0 flex-1 items-center gap-3 rounded-md px-3 py-2 text-start text-sm transition-colors",
+                    "flex min-h-11 min-w-0 items-center gap-3 rounded-md px-3 text-start text-base transition-colors",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300",
                     isActive
                       ? "bg-blush-600 text-white shadow-sm"
-                      : "text-ink hover:bg-blush-50 hover:text-blush-600"
+                      : "text-ink hover:bg-blush-50 hover:text-blush-700"
                   )}
                   aria-pressed={isActive}
+                  aria-label={`השמעת ${title}`}
                 >
                   <span
                     className={cn(
-                      "w-6 text-xs tabular-nums",
-                      isActive ? "text-white" : "text-blush-300"
+                      "w-6 shrink-0 text-sm tabular-nums",
+                      isActive ? "text-white" : "text-ink-soft"
                     )}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="flex-1 truncate font-medium">{title}</span>
-                  {isActive && (
-                    <span aria-hidden="true" className="flex items-end gap-0.5">
+                  {/* Play affordance; the equalizer replaces it while playing. */}
+                  {isActive ? (
+                    <span aria-hidden="true" className="flex w-3.5 shrink-0 items-end gap-0.5">
                       <EqualizerBar delay={0} />
                       <EqualizerBar delay={0.15} />
                       <EqualizerBar delay={0.3} />
                     </span>
+                  ) : (
+                    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-blush-600" fill="currentColor" aria-hidden="true">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
                   )}
+                  <span className="truncate font-medium">{title}</span>
                 </motion.button>
                 )}
                 {track.lyricsHe?.trim() && (
                   <Link
                     href={`/lyrics/${encodeURIComponent(track.slug)}`}
                     aria-label={`מילים לשיר ${title}`}
-                    className="shrink-0 rounded-md px-2 py-2 text-xs font-medium text-blush-700 underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
+                    className="inline-flex min-h-11 shrink-0 items-center rounded-md px-3 text-sm font-medium text-blush-700 underline underline-offset-4 decoration-blush-300 hover:decoration-blush-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
                   >
                     מילים
                   </Link>
@@ -243,7 +250,7 @@ function StreamingPill({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-full border border-blush-200 bg-paper px-3 py-1 text-xs text-ink-soft transition-colors hover:border-blush-400 hover:text-blush-500"
+      className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-blush-200 bg-paper px-4 text-sm text-ink transition-colors hover:border-blush-400 hover:text-blush-700"
     >
       {icon}
       <span>{label}</span>
