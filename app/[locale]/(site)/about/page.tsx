@@ -66,12 +66,6 @@ export function generateMetadata(): Metadata {
 /*  Static fallback data (used when the admin panel hasn't been populated) */
 /* ------------------------------------------------------------------ */
 
-export const STATIC_PRESS_QUOTES: { quote: string; source: string }[] = [
-  { quote: "אחד הקולות הכי מרגשים שעלו בישראל בשנים האחרונות", source: "גלגלצ" },
-  { quote: "הכישרון של עלמה גוב הוא נדיר — מילים שנוגעות בלב", source: "מאקו" },
-  { quote: "השיר 'מה לעשות עם הזאב' שבר את כל התקרות", source: "כאן 88" },
-];
-
 export const MILESTONES: { year: string; text: string }[] = [
   { year: "2021", text: "אלבום בכורה — \"מאוחר מידי\"" },
   { year: "2022", text: "מועמדת לפרס פריצת השנה — גלגלצ" },
@@ -140,10 +134,10 @@ export default async function AboutPage() {
     adminAbout?.influences && adminAbout.influences.length > 0
       ? adminAbout.influences
       : INFLUENCES;
-  const pressQuotes =
-    adminAbout?.pressQuotes && adminAbout.pressQuotes.length > 0
-      ? adminAbout.pressQuotes
-      : STATIC_PRESS_QUOTES;
+  // Press quotes appear only when entered in the admin panel. The built-in
+  // fallback quotes (credited to real outlets, unverified) are no longer
+  // shown on the public site.
+  const pressQuotes = adminAbout?.pressQuotes ?? [];
 
   return (
     <main className="px-6 py-12">
@@ -271,7 +265,7 @@ export default async function AboutPage() {
                   style={{ transform: `rotate(${tiltFromText(fact)}deg)` }}
                 >
                   <Tape className="absolute -top-2.5 start-1/2 h-3 w-10 opacity-40" centerX />
-                  <span className="text-sm text-ink" dir="auto">{fact}</span>
+                  <span className="text-xl text-ink" dir="auto">{fact}</span>
                 </div>
               </StaggerItem>
             ))}
@@ -306,7 +300,7 @@ export default async function AboutPage() {
                       className="absolute start-2.5 top-1.5 h-3 w-3 rounded-full bg-blush-400 ring-2 ring-white"
                       aria-hidden="true"
                     />
-                    <span className="flex-shrink-0 font-display text-sm text-blush-500">
+                    <span className="flex-shrink-0 font-display text-xl leading-6 text-blush-700">
                       {ms.year}
                     </span>
                     <span className="text-ink" dir="auto">{ms.text}</span>
@@ -348,7 +342,8 @@ export default async function AboutPage() {
           </StaggerGrid>
         </ScrollReveal>
 
-        {/* -------- Press Quotes (always shown) -------- */}
+        {/* -------- Press Quotes (only real, admin-entered ones) -------- */}
+        {pressQuotes.length > 0 && (
         <ScrollReveal as="section" className="mt-12 md:mt-16">
           <div className="mb-6 flex items-center justify-center gap-2">
             <Star className="h-4 w-4" />
@@ -382,31 +377,10 @@ export default async function AboutPage() {
             ))}
           </div>
         </ScrollReveal>
+        )}
 
-        {/* -------- Achievement Stats -------- */}
-        <ScrollReveal as="section" className="mt-12 md:mt-16">
-          <StaggerGrid className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {(
-              [
-                { label: t("statsAlbums"), value: "4" },
-                { label: t("statsListens"), value: "6M+" },
-                { label: t("statsYears"), value: "5+" },
-                { label: t("statsSingles"), value: "15+" },
-              ] as const
-            ).map((stat) => (
-              <StaggerItem key={stat.label}>
-                <div className="rounded-sm border border-blush-100 bg-paper-warm p-4 text-center">
-                  <span className="block font-display text-4xl font-bold text-blush-600">
-                    {stat.value}
-                  </span>
-                  <span className="mt-1 block text-sm font-medium text-ink-soft">
-                    {stat.label}
-                  </span>
-                </div>
-              </StaggerItem>
-            ))}
-          </StaggerGrid>
-        </ScrollReveal>
+        {/* Achievement stats ("4 albums", "6M+ listens", …) were hard-coded
+            and unverified, so they're hidden until confirmed. */}
 
         {/* Bottom decorative flourish */}
         <div className="mt-12 flex items-center justify-center gap-3">

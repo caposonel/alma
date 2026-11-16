@@ -8,7 +8,6 @@ import {
   setDiaryEntries,
   getUpcomingShowsAdmin,
   getPastShowsAdmin,
-  setUpcomingShowsAdmin,
   setPastShowsAdmin,
   getPhotosAdmin,
   setPhotosAdmin,
@@ -26,13 +25,9 @@ import {
 // into the admin schema, then writes them to the admin store.
 // Nothing is duplicated; the constants stay where they are.
 import { STATIC_DIARY_ENTRIES } from "@/app/[locale]/(site)/diary/page";
-import {
-  STATIC_UPCOMING,
-  STATIC_PAST,
-} from "@/app/[locale]/(site)/shows/page";
+import { STATIC_PAST } from "@/app/[locale]/(site)/shows/page";
 import { STATIC_PHOTOS } from "@/app/[locale]/(site)/gallery/page";
 import {
-  STATIC_PRESS_QUOTES,
   MILESTONES,
   INFLUENCES,
   FUN_FACTS,
@@ -133,16 +128,9 @@ export async function importShowsPlaceholders(): Promise<ImportResult> {
     };
   }
 
-  const upcoming: AdminShow[] = STATIC_UPCOMING.map((s) => ({
-    id: s.id,
-    date: s.date,
-    venue: s.venue,
-    city: s.city,
-    title: s.title,
-    status: s.status,
-    ticketUrl: s.ticketUrl,
-    notes: undefined,
-  }));
+  // Only the past-show history is imported. The old placeholder "upcoming"
+  // gigs (with example.com ticket links) were removed: imported, they'd be
+  // advertised as real concerts.
   const past: AdminShow[] = STATIC_PAST.map((s) => ({
     id: s.id,
     date: s.date,
@@ -154,13 +142,10 @@ export async function importShowsPlaceholders(): Promise<ImportResult> {
     notes: undefined,
   }));
 
-  await Promise.all([
-    setUpcomingShowsAdmin(upcoming),
-    setPastShowsAdmin(past),
-  ]);
+  await setPastShowsAdmin(past);
   revalidatePath("/admin/shows");
   revalidatePublicSite();
-  return { ok: true, imported: upcoming.length + past.length };
+  return { ok: true, imported: past.length };
 }
 
 /* ---------------------------------------------------------------------- */
@@ -223,11 +208,9 @@ export async function importAboutPlaceholders(): Promise<ImportResult> {
     funFacts: [...FUN_FACTS],
     milestones: MILESTONES.map((m) => ({ year: m.year, text: m.text })),
     influences: INFLUENCES.map((i) => ({ name: i.name, icon: i.icon })),
-    pressQuotes: STATIC_PRESS_QUOTES.map((q) => ({
-      quote: q.quote,
-      source: q.source,
-      sourceUrl: undefined,
-    })),
+    // Placeholder press quotes are unverified (credited to real outlets),
+    // so they're not imported: real quotes are added in the admin panel.
+    pressQuotes: [],
   };
 
   await setAbout(next);

@@ -140,7 +140,8 @@ async function buildAlbumDiscography(
 ): Promise<DiscographyAlbum[]> {
   const grouped = new Map<string, AdminLyric[]>();
   for (const l of adminLyrics) {
-    if (!l.spotifyTrackId) continue; // can't play without a track ID
+    // Playable in the page (YouTube) or at least linkable (Spotify).
+    if (!l.youtubeId && !l.spotifyTrackId) continue;
     const key = l.releaseTitle || "—";
     const list = grouped.get(key);
     if (list) list.push(l);

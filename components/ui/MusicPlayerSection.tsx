@@ -106,6 +106,8 @@ export function MusicPlayerSection({
   /* Imperative handle to the YouTube IFrame player's controller. Used by
    * the discography to drive playback (loadUri = loadVideoById + play). */
   const ytControllerRef = useRef<YouTubePlayerController | null>(null);
+  /** Track tapped before the YouTube controller existed; loaded on ready. */
+  const pendingVideoIdRef = useRef<string | null>(null);
 
   /* Global music-player context — lets the sticky MailingBar at the bottom
    * of every page show a mini-player (pause/resume + progress) wired to the
@@ -149,6 +151,9 @@ export function MusicPlayerSection({
     return () => {
       const p = playerRef.current;
       if (!p) return;
+      // Only clear the global controller if it's still ours — never wipe
+      // state another (newer) player instance has already set.
+      if (p.controller && p.controller !== ytControllerRef.current) return;
       p.setController(null);
       p.setCurrentTrack(null);
       p.updatePlaybackState({ positionMs: 0, durationMs: 0, isPaused: true });
@@ -166,6 +171,11 @@ export function MusicPlayerSection({
       } catch (err) {
         console.warn("YouTube controller call failed:", err);
       }
+    } else {
+      // Player still loading (slow phones): remember the choice and load
+      // it once the controller is ready, so the title/lyrics shown match
+      // what actually plays.
+      pendingVideoIdRef.current = track.youtubeId;
     }
     setCurrentVideoId(track.youtubeId);
     setCurrentPositionMs(0);
@@ -193,9 +203,15 @@ export function MusicPlayerSection({
    * up top) so the MailingBar's mini-player progress bar advances in
    * lockstep with the embed. */
   const lastPositionWriteRef = useRef(0);
+  const lastPausedRef = useRef<boolean | null>(null);
   function handlePlaybackUpdate(state: YouTubePlaybackState) {
     const now = performance.now();
-    if (now - lastPositionWriteRef.current < 60) return;
+    // Never throttle a play/pause/end transition: polling stops once the
+    // player isn't PLAYING, so a dropped pause update was never resent and
+    // the mini-player stayed on "playing".
+    const pausedChanged = state.isPaused !== lastPausedRef.current;
+    if (!pausedChanged && now - lastPositionWriteRef.current < 60) return;
+    lastPausedRef.current = state.isPaused;
     lastPositionWriteRef.current = now;
     setCurrentPositionMs(state.position);
     // Duration only changes when the track changes — but it's cheap to set
@@ -235,6 +251,15 @@ export function MusicPlayerSection({
         onPlaybackUpdate={handlePlaybackUpdate}
         onControllerReady={(controller) => {
           ytControllerRef.current = controller;
+          const pending = pendingVideoIdRef.current;
+          if (pending && controller) {
+            pendingVideoIdRef.current = null;
+            try {
+              controller.loadUri(pending);
+            } catch (err) {
+              console.warn("YouTube controller call failed:", err);
+            }
+          }
           // Hand the YT controller to the global music-player context
           // so the MailingBar mini-player's play/pause/seek/volume
           // buttons can drive it.

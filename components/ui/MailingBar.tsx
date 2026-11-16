@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -69,8 +69,9 @@ export function MailingBar() {
     () =>
       z.object({
         email: z.string().email(t("errorValidation")),
-        // Honeypot — must be empty. Real users never see this field.
-        website: z.string().max(0).optional(),
+        // Honeypot. Not validated client-side: if autofill fills it, the
+        // server quietly drops the submission instead of the form freezing.
+        website: z.string().optional(),
       }),
     [t]
   );
@@ -84,6 +85,34 @@ export function MailingBar() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+
+  /* Publish the bar's real height as `--mailing-bar-h` so the layout can
+   * reserve exactly that much space after the footer. A fixed padding used
+   * to sit above the footer instead, so the bar covered the footer's
+   * copyright line and social icons, and grew wrong when the mini-player
+   * row appeared. When dismissed, leave room for the small restore button. */
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (dismissed) {
+      root.style.setProperty("--mailing-bar-h", "4.5rem");
+      return;
+    }
+    const el = barRef.current;
+    if (!el) return;
+    const apply = () =>
+      root.style.setProperty("--mailing-bar-h", `${el.offsetHeight}px`);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [dismissed, showMiniPlayer]);
+  useEffect(
+    () => () => {
+      document.documentElement.style.setProperty("--mailing-bar-h", "0px");
+    },
+    []
+  );
 
   // Read the persisted dismissed state after mount. There's a brief moment
   // where the bar can flash before localStorage is consulted — acceptable
@@ -149,6 +178,7 @@ export function MailingBar() {
       <AnimatePresence>
         {!dismissed && (
           <motion.div
+            ref={barRef}
             key="mailing-bar"
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -266,6 +296,7 @@ export function MailingBar() {
                         {...register("email")}
                         type="email"
                         dir="ltr"
+                        aria-label={t("emailPlaceholder")}
                         aria-invalid={errors.email ? "true" : undefined}
                         placeholder={t("emailPlaceholder")}
                         // Matched 1:1 to the submit button below — same h-11,

@@ -1,7 +1,7 @@
 import { Header, Footer } from "@/components/layout";
 import { PageTransition, ScrollProgress } from "@/components/motion";
 import { AlmaMascot } from "@/components/decorative/AlmaMascot";
-import { MailingBar } from "@/components/ui/MailingBar";
+import { MailingBarVisible } from "@/components/ui/MailingBarVisible";
 import { MusicPlayerProvider } from "@/lib/music-player-context";
 import { AdminModeProvider } from "@/lib/admin-mode-context";
 import { EditorSidebar } from "@/components/admin/EditorSidebar";
@@ -35,12 +35,14 @@ export default async function SiteLayout({
         <ScrollProgress />
         <Header storeUrl={storeUrl} />
         <PageTransition>
-          {/* Bottom padding so the sticky MailingBar doesn't cover content. */}
-          <div className="min-h-screen pb-20 md:pb-24">{children}</div>
+          <div className="min-h-screen">{children}</div>
         </PageTransition>
         <Footer />
+        {/* Space for the fixed MailingBar, sized from its real height (set
+            by the bar as --mailing-bar-h), so it never covers the footer. */}
+        <div aria-hidden="true" style={{ height: "var(--mailing-bar-h)" }} />
         <AlmaMascot />
-        <MailingBar />
+        <MailingBarVisible />
         {/* Rarely-active decorative client components — code-split
             (next/dynamic) so the initial bundle doesn't ship JS for the
             StickerSheet easter egg or WebGL PaperBackground. */}

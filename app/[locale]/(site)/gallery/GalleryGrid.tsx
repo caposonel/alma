@@ -24,9 +24,18 @@ export function GalleryGrid({ photos }: { photos: Photo[] }) {
           {photos.map((photo, i) => (
             <motion.div
               key={i}
-              className="mb-4 break-inside-avoid cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={photo.alt ? `הגדלת תמונה: ${photo.alt}` : "הגדלת תמונה"}
+              className="mb-4 break-inside-avoid cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-400"
               variants={staggerItem}
               onClick={() => openAt(i)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openAt(i);
+                }
+              }}
             >
               <PolaroidFrame
                 src={photo.src}

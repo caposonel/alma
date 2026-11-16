@@ -65,6 +65,7 @@ function showToSite(show: AdminShow): Show {
     date: show.date,
     city: show.city,
     venue: show.venue,
+    title: show.title,
     ticketUrl: show.ticketUrl,
     notes: show.notes,
     status: show.status,
@@ -151,13 +152,40 @@ export async function getDiaryEntryBySlug(
 /* Shows                                                                      */
 /* -------------------------------------------------------------------------- */
 
+/** Today's date (YYYY-MM-DD) in Israel, where all shows take place. */
+function todayInIsrael(): string {
+  // en-CA formats as YYYY-MM-DD, matching how show dates are stored.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jerusalem",
+  }).format(new Date());
+}
+
+/**
+ * Shows are filed by the admin as "upcoming" or "past", but a gig doesn't
+ * move itself once its date passes. Split by date as well, so yesterday's
+ * show stops being listed (with a ticket button) as upcoming. Pages use ISR
+ * (revalidate = 60), so the cut-over happens within a minute of midnight.
+ */
+async function getShowsSplitByDate(): Promise<{
+  upcoming: AdminShow[];
+  past: AdminShow[];
+}> {
+  const [upcomingBucket, pastBucket] = await Promise.all([
+    getUpcomingShowsAdmin(),
+    getPastShowsAdmin(),
+  ]);
+  const today = todayInIsrael();
+  const upcoming = upcomingBucket.filter((s) => s.date >= today);
+  const lapsed = upcomingBucket.filter((s) => s.date < today);
+  return { upcoming, past: [...pastBucket, ...lapsed] };
+}
+
 export async function getUpcomingShows({
   limit = 10,
 }: { limit?: number } = {}): Promise<Show[]> {
   try {
-    const shows = await getUpcomingShowsAdmin();
-    if (shows.length === 0) return [];
-    const sorted = [...shows].sort((a, b) => a.date.localeCompare(b.date));
+    const { upcoming } = await getShowsSplitByDate();
+    const sorted = [...upcoming].sort((a, b) => a.date.localeCompare(b.date));
     return sorted.slice(0, limit).map(showToSite);
   } catch (err) {
     console.error("KV shows read failed:", err);
@@ -167,10 +195,11 @@ export async function getUpcomingShows({
 
 export async function getPastShows(): Promise<Show[]> {
   try {
-    const shows = await getPastShowsAdmin();
-    if (shows.length === 0) return [];
-    const sorted = [...shows].sort((a, b) => b.date.localeCompare(a.date));
-    return sorted.map(showToSite);
+    const { past } = await getShowsSplitByDate();
+    const sorted = [...past].sort((a, b) => b.date.localeCompare(a.date));
+    return sorted.map((s) =>
+      showToSite(s.status === "upcoming" ? { ...s, status: "past" } : s)
+    );
   } catch (err) {
     console.error("KV shows read failed:", err);
     return [];

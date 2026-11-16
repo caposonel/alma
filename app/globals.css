@@ -32,6 +32,18 @@
   --font-display: var(--font-handwritten), "Playpen Sans", serif;
 }
 
+/* Height reserved below the footer for the fixed MailingBar. These are the
+   pre-hydration defaults; the bar then sets the exact value (and 0 where it
+   isn't shown). */
+:root {
+  --mailing-bar-h: 57px;
+}
+@media (min-width: 768px) {
+  :root {
+    --mailing-bar-h: 70px;
+  }
+}
+
 /* Paper texture background */
 body {
   font-size: 17px;

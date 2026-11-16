@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getMessages, setMessages } from "@/lib/admin-store";
+import { getMessages, markMessageRead } from "@/lib/admin-store";
 import { FormHeader, DangerButton } from "../../_components";
 import { deleteMessage } from "../actions";
 
@@ -25,10 +25,7 @@ export default async function MessageDetailPage({ params }: Props) {
   // Next.js error. The sidebar/dashboard are server components and will
   // re-fetch fresh data on the next nav, so the badge updates naturally.
   if (!message.read) {
-    const updated = messages.map((m) =>
-      m.id === id ? { ...m, read: true } : m
-    );
-    await setMessages(updated);
+    await markMessageRead(id);
     message.read = true;
   }
 

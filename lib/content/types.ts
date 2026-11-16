@@ -39,6 +39,7 @@ export interface Show {
   date: string;
   city: string;
   venue: string;
+  title?: string;
   ticketUrl?: string;
   notes?: string;
   status?: "upcoming" | "sold-out" | "cancelled" | "past";

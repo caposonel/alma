@@ -37,30 +37,39 @@ export function PageTransition({ children }: PageTransitionProps) {
     ? {
         initial: { rotateY: 8, opacity: 0 },
         animate: { rotateY: 0, opacity: 1 },
-        exit: { rotateY: -8, opacity: 0 },
       }
     : {
         initial: { opacity: 0, y: 12 },
         animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -8 },
       };
 
-  // `perspective` must live on the parent of the rotating element to take
-  // effect — applying it on the rotating div itself is a no-op.
+  // Enter-only transition, in two layers:
+  //  - The outer AnimatePresence (initial={false}) has ONE stable child, so
+  //    it never runs an exit and never keeps an old copy mounted. In the
+  //    App Router that exiting copy re-rendered the NEW route (children
+  //    reads the router context), mounting every page twice and letting
+  //    the old copy's unmount cleanups clobber shared state (e.g. the music
+  //    mini-player). Its job now is only `initial={false}`: on first load
+  //    every animated element inside starts in its final, visible state
+  //    (no hidden-until-revealed content in the server-rendered page).
+  //  - The inner div is keyed on the pathname, so client-side navigations
+  //    remount it and replay the fade-in for the new page.
+  // `perspective` must live on the parent of the rotating element.
   return (
     <div style={isLetterRoute ? { perspective: 1200 } : undefined}>
       <AnimatePresence initial={false}>
-        <motion.div
-          key={pathname}
-          initial={variants.initial}
-          animate={variants.animate}
-          exit={variants.exit}
-          transition={{
-            duration: isLetterRoute ? 0.35 : 0.18,
-            ease: "easeInOut",
-          }}
-        >
-          {children}
+        <motion.div key="page-transition-root">
+          <motion.div
+            key={pathname}
+            initial={isFirstRender.current ? false : variants.initial}
+            animate={variants.animate}
+            transition={{
+              duration: isLetterRoute ? 0.35 : 0.18,
+              ease: "easeInOut",
+            }}
+          >
+            {children}
+          </motion.div>
         </motion.div>
       </AnimatePresence>
     </div>

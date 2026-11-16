@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getMessages, setMessages } from "@/lib/admin-store";
+import {
+  deleteMessageById,
+  markAllMessagesRead,
+  markMessageRead,
+} from "@/lib/admin-store";
 
 /**
  * Server actions for the messages inbox.
@@ -21,11 +25,7 @@ async function requireAdmin(): Promise<void> {
 
 export async function markAsRead(id: string): Promise<void> {
   await requireAdmin();
-  const messages = await getMessages();
-  const updated = messages.map((m) =>
-    m.id === id ? { ...m, read: true } : m
-  );
-  await setMessages(updated);
+  await markMessageRead(id);
   revalidatePath("/admin/messages");
   revalidatePath(`/admin/messages/${id}`);
   revalidatePath("/admin/dashboard");
@@ -34,9 +34,7 @@ export async function markAsRead(id: string): Promise<void> {
 
 export async function markAllRead(): Promise<void> {
   await requireAdmin();
-  const messages = await getMessages();
-  const updated = messages.map((m) => ({ ...m, read: true }));
-  await setMessages(updated);
+  await markAllMessagesRead();
   revalidatePath("/admin/messages");
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin", "layout");
@@ -44,9 +42,7 @@ export async function markAllRead(): Promise<void> {
 
 export async function deleteMessage(id: string): Promise<void> {
   await requireAdmin();
-  const messages = await getMessages();
-  const filtered = messages.filter((m) => m.id !== id);
-  await setMessages(filtered);
+  await deleteMessageById(id);
   revalidatePath("/admin/messages");
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin", "layout");

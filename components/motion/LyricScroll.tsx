@@ -278,7 +278,10 @@ export function LyricScroll({
             // their own pace, rather than a (wrong-)highlighted slot
             // moving randomly. See the long comment on the removed
             // `estimatePlainActiveIndex` function above.
-            const showKaraoke = hasSynced;
+            // Dim the other lines only once a line is actually playing.
+            // Before playback (or before the first timed line) every line
+            // stays fully readable instead of sitting at 22% opacity.
+            const showKaraoke = hasSynced && activeIndex >= 0;
             const isActive = showKaraoke && i === activeIndex;
             return (
               <motion.p

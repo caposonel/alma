@@ -152,7 +152,10 @@ export default async function DiaryPage() {
     getSettingsAdmin().catch(() => null),
   ]);
   const hasEntries = entries.length > 0;
-  const displayEntries = hasEntries ? entries : STATIC_DIARY_ENTRIES;
+  // Placeholder entries are listed newest first, like real ones.
+  const displayEntries = hasEntries
+    ? entries
+    : [...STATIC_DIARY_ENTRIES].sort((a, b) => b.date.localeCompare(a.date));
   const t = await getTranslations("diary");
 
   const diaryTitle = readContentOverride(settings, "page.diary.title", t("title"));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -43,6 +43,9 @@ export function Header({ storeUrl }: HeaderProps) {
   const t = useTranslations("nav");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
 
   const navLinks: NavLink[] = [
     ...baseNavLinks,
@@ -69,13 +72,36 @@ export function Header({ storeUrl }: HeaderProps) {
     };
   }, [drawerOpen]);
 
+  /* Keyboard + focus handling for the drawer: Escape closes it, focus
+   * moves to its close button on open and back to the menu button when it
+   * closes (only if it was actually open, so page load doesn't steal focus). */
+  useEffect(() => {
+    if (drawerOpen) {
+      wasOpenRef.current = true;
+      // Wait a frame: the drawer is `inert` until this render commits.
+      const id = requestAnimationFrame(() => closeButtonRef.current?.focus());
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setDrawerOpen(false);
+      };
+      document.addEventListener("keydown", onKey);
+      return () => {
+        cancelAnimationFrame(id);
+        document.removeEventListener("keydown", onKey);
+      };
+    }
+    if (wasOpenRef.current) {
+      wasOpenRef.current = false;
+      menuButtonRef.current?.focus();
+    }
+  }, [drawerOpen]);
+
   return (
     <>
       <header
         className={cn(
           "sticky top-0 z-50 transition-all duration-200",
           scrolled
-            ? "border-b border-blush-100/50 bg-paper/95 md:backdrop-blur-sm"
+            ? "border-b border-blush-100/50 bg-paper md:bg-paper/95 md:backdrop-blur-sm"
             : "bg-paper"
         )}
       >
@@ -161,9 +187,12 @@ export function Header({ storeUrl }: HeaderProps) {
                 padding for thumb taps. `-m-2.5` keeps visual alignment
                 with the surrounding nav (the extra padding is invisible). */}
             <button
+              ref={menuButtonRef}
               onClick={() => setDrawerOpen(true)}
               className="-m-2.5 p-2.5 text-ink-soft md:hidden"
               aria-label="Menu"
+              aria-expanded={drawerOpen}
+              aria-controls="mobile-menu"
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -227,14 +256,16 @@ export function Header({ storeUrl }: HeaderProps) {
               ? "translate-x-0"
               : "rtl:-translate-x-full ltr:translate-x-full"
           )}
+          id="mobile-menu"
           aria-label="Mobile menu"
         >
           <div className="mb-8 flex items-center justify-between">
             <span className="font-display text-2xl font-bold text-ink">עלמה גוב</span>
             <button
+              ref={closeButtonRef}
               onClick={() => setDrawerOpen(false)}
               aria-label="Close menu"
-              className="text-ink-soft"
+              className="-m-2 p-2 text-ink-soft"
             >
               <X className="h-6 w-6" />
             </button>

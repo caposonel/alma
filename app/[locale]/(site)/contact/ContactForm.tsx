@@ -26,13 +26,33 @@ export function ContactForm() {
   // Build the schema with translated error messages
   const schema = useMemo(
     () =>
+      // Same rules as the server (_submit.ts), so anything the browser
+      // accepts the server accepts too — and errors land on the right field
+      // instead of a generic "check all fields".
       z.object({
-        name: z.string().min(1, t("formErrorName")),
-        email: z.string().email(t("formErrorEmail")),
-        subject: z.string().min(1, t("formErrorSubject")),
-        message: z.string().min(10, t("formErrorMessage")),
-        // Honeypot — must be empty. Real users never see this field.
-        website: z.string().max(0).optional(),
+        name: z
+          .string()
+          .trim()
+          .min(1, t("formErrorName"))
+          .max(100, t("formErrorTooLong")),
+        email: z
+          .string()
+          .trim()
+          .email(t("formErrorEmail"))
+          .max(200, t("formErrorTooLong")),
+        subject: z
+          .string()
+          .trim()
+          .min(1, t("formErrorSubject"))
+          .max(200, t("formErrorTooLong")),
+        message: z
+          .string()
+          .trim()
+          .min(10, t("formErrorMessage"))
+          .max(5000, t("formErrorMessageTooLong")),
+        // Honeypot. Not validated here: if autofill ever fills it, the
+        // server quietly accepts and drops the submission.
+        website: z.string().optional(),
       }),
     [t]
   );
@@ -99,18 +119,22 @@ export function ContactForm() {
         style={HONEYPOT_STYLE}
       />
 
-      <Field label={t("formName")} error={errors.name?.message}>
+      <Field id="contact-name" label={t("formName")} error={errors.name?.message}>
         <input
           {...register("name")}
+          id="contact-name"
+          aria-describedby={errors.name ? "contact-name-error" : undefined}
           aria-invalid={errors.name ? "true" : undefined}
           className={cn("form-input", errors.name && errorInputClasses)}
           placeholder={t("formNamePlaceholder")}
         />
       </Field>
 
-      <Field label={t("formEmail")} error={errors.email?.message}>
+      <Field id="contact-email" label={t("formEmail")} error={errors.email?.message}>
         <input
           {...register("email")}
+          id="contact-email"
+          aria-describedby={errors.email ? "contact-email-error" : undefined}
           type="email"
           dir="ltr"
           aria-invalid={errors.email ? "true" : undefined}
@@ -119,18 +143,22 @@ export function ContactForm() {
         />
       </Field>
 
-      <Field label={t("formSubject")} error={errors.subject?.message}>
+      <Field id="contact-subject" label={t("formSubject")} error={errors.subject?.message}>
         <input
           {...register("subject")}
+          id="contact-subject"
+          aria-describedby={errors.subject ? "contact-subject-error" : undefined}
           aria-invalid={errors.subject ? "true" : undefined}
           className={cn("form-input", errors.subject && errorInputClasses)}
           placeholder={t("formSubjectPlaceholder")}
         />
       </Field>
 
-      <Field label={t("formMessage")} error={errors.message?.message}>
+      <Field id="contact-message" label={t("formMessage")} error={errors.message?.message}>
         <textarea
           {...register("message")}
+          id="contact-message"
+          aria-describedby={errors.message ? "contact-message-error" : undefined}
           rows={5}
           aria-invalid={errors.message ? "true" : undefined}
           className={cn("form-input resize-none", errors.message && errorInputClasses)}
@@ -152,21 +180,27 @@ export function ContactForm() {
 }
 
 function Field({
+  id,
   label,
   error,
   children,
 }: {
+  id: string;
   label: string;
   error?: string;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-ink">
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-ink">
         {label}
       </label>
       {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && (
+        <p id={`${id}-error`} role="alert" className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

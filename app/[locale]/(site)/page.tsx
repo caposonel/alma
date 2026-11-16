@@ -213,23 +213,16 @@ function HeroSection({
 }
 
 function DiaryShowsRow({ upcoming }: { upcoming: Show[] }) {
-  // If the admin panel has upcoming, use that; else use static fallback.
-  // Static fallback shows for when the admin panel has no upcoming entries.
-  const staticUpcoming = [
-    { id: "u1", date: "2026-06-12", venue: "המועדון של הבארבי", city: "תל אביב", ticketUrl: "https://example.com" },
-    { id: "u2", date: "2026-07-03", venue: "תיאטרון תמונע", city: "חיפה", ticketUrl: "https://example.com" },
-    { id: "u3", date: "2026-08-22", venue: "מוסררה", city: "ירושלים", ticketUrl: "https://example.com" },
-  ];
-
-  const showsForCard = upcoming.length > 0
-    ? upcoming.map((s) => ({
-        id: s._id,
-        date: s.date,
-        venue: s.venue,
-        city: s.city,
-        ticketUrl: s.ticketUrl,
-      }))
-    : staticUpcoming;
+  // Real upcoming shows only. When there are none, ShowsCard renders its
+  // "no upcoming shows" message (placeholder gigs with example.com ticket
+  // links used to appear here).
+  const showsForCard = upcoming.map((s) => ({
+    id: s._id,
+    date: s.date,
+    venue: s.venue,
+    city: s.city,
+    ticketUrl: s.ticketUrl,
+  }));
 
   return (
     <section className="px-6 pt-2 pb-12 md:px-10 md:pt-4 md:pb-16 lg:px-14">

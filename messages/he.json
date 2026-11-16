@@ -119,7 +119,9 @@
     "formThanksDetail": "ההודעה נשלחה, אחזור אליכם בקרוב.",
     "infoGeneralEmail": "אימייל כללי",
     "infoBookingEmail": "הזמנות להופעות",
-    "infoFollow": "עקבו אחריי"
+    "infoFollow": "עקבו אחריי",
+    "formErrorTooLong": "הטקסט ארוך מדי",
+    "formErrorMessageTooLong": "ההודעה ארוכה מדי (עד 5,000 תווים)"
   },
   "footer": {
     "tagline": "מילים, שירים, ושום שיגעון",

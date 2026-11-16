@@ -59,6 +59,18 @@ interface ListStore extends Store {
   lpushTrim?<T>(key: string, value: T, maxLen: number): Promise<void>;
   /** Read a list from head (index 0) to tail. */
   lrange?<T>(key: string): Promise<T[]>;
+  /** Remove every list item matching `match` (atomic per item, via LREM). */
+  lremoveWhere?<T>(key: string, match: (item: T) => boolean): Promise<number>;
+  /**
+   * Replace every list item matching `match` with `update(item)`, keeping
+   * its position (LINSERT BEFORE + LREM, by value, so concurrent pushes to
+   * the head can't make it hit the wrong item).
+   */
+  lupdateWhere?<T>(
+    key: string,
+    match: (item: T) => boolean,
+    update: (item: T) => T
+  ): Promise<number>;
 }
 
 type KvClient = Awaited<typeof import("@vercel/kv")>["kv"];
@@ -83,6 +95,43 @@ export async function getKvClient(): Promise<KvClient> {
   return kvClient;
 }
 
+let kvRawClient: KvClient | null = null;
+
+/**
+ * Same database, but without automatic JSON deserialization: list reads
+ * return the exact stored strings. Needed to (a) parse list items exactly
+ * once — the default client already turns them into objects, and parsing
+ * those again silently dropped every item — and (b) address items by their
+ * exact stored value for LREM / LINSERT.
+ */
+async function getKvRawClient(): Promise<KvClient> {
+  if (kvRawClient) return kvRawClient;
+  const { createClient } = await import("@vercel/kv");
+  kvRawClient = createClient({
+    url: kvConfig!.url,
+    token: kvConfig!.token,
+    retry: { retries: 1, backoff: () => 100 },
+    signal: () => AbortSignal.timeout(3000),
+    automaticDeserialization: false,
+  });
+  return kvRawClient;
+}
+
+/** Read a list as [exact stored string, parsed value] pairs. */
+async function lrangeRaw<T>(key: string): Promise<Array<[string, T]>> {
+  const raw = await getKvRawClient();
+  const items = await raw.lrange<string>(key, 0, -1);
+  const out: Array<[string, T]> = [];
+  for (const s of items) {
+    try {
+      out.push([s, JSON.parse(s) as T]);
+    } catch {
+      /* skip malformed entries */
+    }
+  }
+  return out;
+}
+
 let vercelKvStore: ListStore | null = null;
 async function getVercelKvStore(): Promise<ListStore> {
   if (vercelKvStore) return vercelKvStore;
@@ -102,16 +151,39 @@ async function getVercelKvStore(): Promise<ListStore> {
       await kv.ltrim(key, 0, maxLen - 1);
     },
     async lrange<T>(key: string): Promise<T[]> {
-      const raw = await kv.lrange<string>(key, 0, -1);
-      return raw
-        .map((s) => {
-          try {
-            return JSON.parse(s) as T;
-          } catch {
-            return null;
-          }
-        })
-        .filter((v): v is T => v !== null);
+      return (await lrangeRaw<T>(key)).map(([, v]) => v);
+    },
+    async lremoveWhere<T>(
+      key: string,
+      match: (item: T) => boolean
+    ): Promise<number> {
+      const raw = await getKvRawClient();
+      let removed = 0;
+      for (const [str, item] of await lrangeRaw<T>(key)) {
+        if (match(item)) removed += await raw.lrem(key, 0, str);
+      }
+      return removed;
+    },
+    async lupdateWhere<T>(
+      key: string,
+      match: (item: T) => boolean,
+      update: (item: T) => T
+    ): Promise<number> {
+      const raw = await getKvRawClient();
+      let updated = 0;
+      for (const [str, item] of await lrangeRaw<T>(key)) {
+        if (!match(item)) continue;
+        const next = JSON.stringify(update(item));
+        if (next === str) continue;
+        // Insert the new value right before the old one, then remove the
+        // old one: position is kept and both ops address the item by value.
+        const len = await raw.linsert(key, "before", str, next);
+        if (len > 0) {
+          await raw.lrem(key, 1, str);
+          updated++;
+        }
+      }
+      return updated;
     },
   };
   return vercelKvStore;
@@ -412,16 +484,76 @@ const MESSAGES_KEY = "messages";
 const MESSAGES_LIST_KEY = "messages:list";
 const MAX_STORED_MESSAGES = 500;
 
+/** Merge the KV list with legacy blob entries (deduped by id), newest first. */
+function mergeById<T extends { id: string }>(
+  list: T[],
+  legacy: T[],
+  dateOf: (item: T) => string
+): T[] {
+  const seen = new Set(list.map((i) => i.id));
+  return [...list, ...legacy.filter((i) => !seen.has(i.id))].sort((a, b) =>
+    dateOf(b).localeCompare(dateOf(a))
+  );
+}
+
 export async function getMessages(): Promise<ContactMessage[]> {
   const store = await getStore();
-  // Prefer the list-backed storage on KV (newer writes go here via lpush);
-  // fall back to the legacy JSON-blob key for the file store and for any
-  // legacy data that pre-dates the list migration.
-  if (store.lrange) {
-    const list = await store.lrange<ContactMessage>(MESSAGES_LIST_KEY);
-    if (list.length > 0) return list;
+  // New messages live in a KV list (lpush); older data may sit in the
+  // legacy JSON-blob key (and the file store only has that). Read both so
+  // neither hides the other.
+  const legacy = (await store.get<ContactMessage[]>(MESSAGES_KEY)) ?? [];
+  if (!store.lrange) return legacy;
+  const list = await store.lrange<ContactMessage>(MESSAGES_LIST_KEY);
+  return mergeById(list, legacy, (m) => m.receivedAt);
+}
+
+/** Apply `update` to matching messages wherever they're stored. */
+async function updateMessagesWhere(
+  match: (m: ContactMessage) => boolean,
+  update: (m: ContactMessage) => ContactMessage
+): Promise<void> {
+  const store = await getStore();
+  if (store.lupdateWhere) {
+    await store.lupdateWhere<ContactMessage>(MESSAGES_LIST_KEY, match, update);
   }
-  return (await store.get<ContactMessage[]>(MESSAGES_KEY)) ?? [];
+  const legacy = (await store.get<ContactMessage[]>(MESSAGES_KEY)) ?? [];
+  if (legacy.some(match)) {
+    await store.set(
+      MESSAGES_KEY,
+      legacy.map((m) => (match(m) ? update(m) : m))
+    );
+  }
+}
+
+export async function markMessageRead(id: string): Promise<void> {
+  await updateMessagesWhere(
+    (m) => m.id === id && !m.read,
+    (m) => ({ ...m, read: true })
+  );
+}
+
+export async function markAllMessagesRead(): Promise<void> {
+  await updateMessagesWhere(
+    (m) => !m.read,
+    (m) => ({ ...m, read: true })
+  );
+}
+
+export async function deleteMessageById(id: string): Promise<void> {
+  const store = await getStore();
+  if (store.lremoveWhere) {
+    await store.lremoveWhere<ContactMessage>(
+      MESSAGES_LIST_KEY,
+      (m) => m.id === id
+    );
+  }
+  const legacy = (await store.get<ContactMessage[]>(MESSAGES_KEY)) ?? [];
+  if (legacy.some((m) => m.id === id)) {
+    await store.set(
+      MESSAGES_KEY,
+      legacy.filter((m) => m.id !== id)
+    );
+  }
 }
 
 export async function setMessages(messages: ContactMessage[]): Promise<void> {
@@ -483,11 +615,12 @@ const MAX_STORED_SUBSCRIBERS = 5000;
 
 export async function getSubscribers(): Promise<Subscriber[]> {
   const store = await getStore();
-  if (store.lrange) {
-    const list = await store.lrange<Subscriber>(SUBSCRIBERS_LIST_KEY);
-    if (list.length > 0) return list;
-  }
-  return (await store.get<Subscriber[]>(SUBSCRIBERS_KEY)) ?? [];
+  // Same layout as messages: KV list for new sign-ups, legacy blob for
+  // older data and the file store. Read both.
+  const legacy = (await store.get<Subscriber[]>(SUBSCRIBERS_KEY)) ?? [];
+  if (!store.lrange) return legacy;
+  const list = await store.lrange<Subscriber>(SUBSCRIBERS_LIST_KEY);
+  return mergeById(list, legacy, (s) => s.subscribedAt);
 }
 
 export async function setSubscribers(subs: Subscriber[]): Promise<void> {
@@ -535,38 +668,17 @@ export async function addSubscriber(
 }
 
 export async function removeSubscriber(id: string): Promise<void> {
-  // The lpush list and the legacy JSON-blob key can both hold data.
-  // getSubscribers() prefers the list when it has entries, so a naive
-  // setSubscribers() write to the legacy key alone wouldn't take effect
-  // on the next read. We therefore:
-  //   1. Read the current subscriber set (using getSubscribers, which
-  //      already prefers the list on KV).
-  //   2. Filter out the deleted id.
-  //   3. Try to clear the KV list so future writes don't resurrect the
-  //      deleted entry.
-  //   4. Write the filtered set to the legacy key as the source of truth.
-  //
-  // On the file store the list ops are no-ops; setSubscribers handles it.
-  const subs = await getSubscribers();
-  const filtered = subs.filter((s) => s.id !== id);
-
+  // Remove just this subscriber from wherever it's stored. (This used to
+  // delete the whole KV list and rewrite the legacy key from a read that
+  // missed list entries, which erased every recent subscriber.)
   const store = await getStore();
-  if (store.lpushTrim) {
-    // Clear the KV list by trimming to an empty range. Fresh subscribers
-    // added after this will lpush onto an empty list, which is fine.
-    try {
-      const kv = await getKvClient();
-      await kv.del(SUBSCRIBERS_LIST_KEY);
-    } catch (err) {
-      // If clearing the list fails, the legacy-key write below still
-      // produces correct behavior on the next read because the list
-      // will likely be partial/empty and getSubscribers falls back to
-      // the legacy key when the list is empty.
-      console.warn("admin-store: removeSubscriber list clear failed", err);
-    }
+  if (store.lremoveWhere) {
+    await store.lremoveWhere<Subscriber>(SUBSCRIBERS_LIST_KEY, (s) => s.id === id);
   }
-
-  await setSubscribers(filtered);
+  const legacy = (await store.get<Subscriber[]>(SUBSCRIBERS_KEY)) ?? [];
+  if (legacy.some((s) => s.id === id)) {
+    await setSubscribers(legacy.filter((s) => s.id !== id));
+  }
 }
 
 export async function getSubscriberCount(): Promise<number> {

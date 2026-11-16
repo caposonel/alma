@@ -119,6 +119,28 @@ export function IsraelMap({ shows, className = "", highlightCity, onCityClick, o
     cityGroups.get(key)!.push(show);
   }
 
+  // City labels: close cities (Tel Aviv / Givatayim / Herzliya) used to
+  // print on top of each other. Place labels greedily — cities with more
+  // shows first — and skip any that would overlap one already placed. A
+  // skipped label still appears when its city is selected.
+  const LABEL_W = 46; // approx. label width in map units
+  const LABEL_H = 13;
+  const placedLabels: Array<{ x: number; y: number }> = [];
+  const labelledKeys = new Set<string>();
+  for (const [key, group] of [...cityGroups.entries()].sort(
+    (a, b) => b[1].length - a[1].length
+  )) {
+    const { x, y } = group[0].coords;
+    const ly = y + 18;
+    const clash = placedLabels.some(
+      (p) => Math.abs(p.x - x) < LABEL_W && Math.abs(p.y - ly) < LABEL_H
+    );
+    if (!clash) {
+      placedLabels.push({ x, y: ly });
+      labelledKeys.add(key);
+    }
+  }
+
   return (
     <div className={`relative ${className}`}>
       <svg
@@ -251,17 +273,25 @@ export function IsraelMap({ shows, className = "", highlightCity, onCityClick, o
                 </>
               )}
 
-              {/* City label */}
-              <text
-                x={coords.x}
-                y={coords.y + 16}
-                textAnchor="middle"
-                fill="#5a4f4a"
-                fontSize="9"
-                fontFamily="sans-serif"
-              >
-                {groupShows[0].city}
-              </text>
+              {/* City label (skipped when it would overlap a neighbour,
+                  unless this city is the selected one). The paper-coloured
+                  stroke behind the glyphs keeps it legible over the map. */}
+              {(labelledKeys.has(key) || isActive) && (
+                <text
+                  x={coords.x}
+                  y={coords.y + 18}
+                  textAnchor="middle"
+                  fill="#2a2a2a"
+                  stroke="#fbf6f0"
+                  strokeWidth="3"
+                  paintOrder="stroke"
+                  fontSize="11"
+                  fontWeight="500"
+                  fontFamily="sans-serif"
+                >
+                  {groupShows[0].city}
+                </text>
+              )}
             </g>
           );
         })}

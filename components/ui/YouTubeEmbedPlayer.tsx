@@ -254,6 +254,10 @@ export function YouTubeEmbedPlayer({
         seek: (seconds: number) => {
           try {
             p.seekTo(seconds, true);
+            // Polling only runs while PLAYING and YouTube may not fire a
+            // state change for a seek while paused, so report the new
+            // position ourselves (progress bar + lyrics follow the seek).
+            emitPlaybackUpdate(p);
           } catch {
             /* ok */
           }

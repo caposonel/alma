@@ -19,7 +19,7 @@ const schema = z.object({
   email: z.string().trim().email().max(200),
   country: z.string().trim().max(100).optional(),
   // Honeypot — bots fill every field, humans don't see this one.
-  website: z.string().max(0).optional(),
+  website: z.string().optional(), // honeypot: checked below, not rejected here
 });
 
 // In-memory rate limit. Resets on cold start; fine for a low-volume site.

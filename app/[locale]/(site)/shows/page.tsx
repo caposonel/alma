@@ -57,12 +57,6 @@ interface StaticShow {
   ticketUrl?: string;
 }
 
-export const STATIC_UPCOMING: StaticShow[] = [
-  { id: "u1", date: "2026-06-12", venue: "המועדון של הבארבי", city: "תל אביב", status: "upcoming", ticketUrl: "https://example.com" },
-  { id: "u2", date: "2026-07-03", venue: "תיאטרון תמונע", city: "חיפה", status: "upcoming", ticketUrl: "https://example.com" },
-  { id: "u3", date: "2026-08-22", venue: "מוסררה", city: "ירושלים", status: "upcoming", ticketUrl: "https://example.com" },
-];
-
 export const STATIC_PAST: StaticShow[] = [
   { id: "ps1", date: "2026-05-12", venue: "QUEENTA", city: "ירושלים", status: "past" },
   { id: "ps2", date: "2026-01-29", venue: "תיאטרון גבעתיים", city: "גבעתיים", status: "past" },
@@ -143,7 +137,7 @@ export default async function ShowsPage() {
   const past = pastShows.length > 0 ? pastShows : null;
 
   /* Build MusicEvent JSON-LD for both upcoming and past shows. */
-  const upcomingForSchema = upcoming ?? STATIC_UPCOMING;
+  const upcomingForSchema = upcoming ?? [];
   const pastForSchema = past ?? STATIC_PAST;
   const eventSchemas = [
     ...upcomingForSchema.map((s) =>
@@ -151,9 +145,9 @@ export default async function ShowsPage() {
         date: s.date,
         venue: s.venue,
         city: s.city,
-        title: "title" in s ? s.title : undefined,
+        title: s.title,
         ticketUrl: s.ticketUrl,
-        status: "status" in s ? s.status : "upcoming",
+        status: s.status ?? "upcoming",
       })
     ),
     ...pastForSchema.map((s) =>
@@ -218,14 +212,12 @@ export default async function ShowsPage() {
               </h2>
             </EditableText>
           </ScrollReveal>
-          {upcoming || STATIC_UPCOMING.length > 0 ? (
+          {upcoming ? (
             <StaggerGrid className="space-y-3" staggerDelay={0.08}>
-              {(upcoming ?? STATIC_UPCOMING).map((show) => {
-                const id = "_id" in show ? show._id : show.id;
-                const adminId = "_id" in show ? show._id : null;
-                const status =
-                  ("status" in show && show.status) ||
-                  ("status" in show ? show.status : "upcoming");
+              {upcoming.map((show) => {
+                const id = show._id;
+                const adminId: string | null = show._id;
+                const status = show.status ?? "upcoming";
                 return (
                   <StaggerItem key={id}>
                     <TicketStub className="flex items-center justify-between gap-4">
@@ -265,7 +257,7 @@ export default async function ShowsPage() {
                           ) : (
                             <p className="text-sm text-ink-soft">{show.city}</p>
                           )}
-                          {("title" in show && show.title) && (
+                          {show.title && (
                             <p className="text-xs text-blush-400 mt-1">{show.title}</p>
                           )}
                         </div>

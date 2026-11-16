@@ -140,9 +140,27 @@ function AlbumCard({
         <ul className="mt-4 space-y-1">
           {album.tracks.map((track, i) => {
             const title = track.titleHe;
-            const isActive = track.spotifyTrackId === currentTrackId;
+            // The player runs on YouTube, so `currentTrackId` is a video id.
+            const isActive =
+              !!track.youtubeId && track.youtubeId === currentTrackId;
+            const spotifyOnly = !track.youtubeId && !!track.spotifyTrackId;
             return (
               <li key={track.slug} className="flex items-center gap-1">
+                {spotifyOnly ? (
+                  <a
+                    href={`https://open.spotify.com/track/${track.spotifyTrackId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-3 py-2 text-start text-sm text-ink transition-colors hover:bg-blush-50 hover:text-blush-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blush-300"
+                  >
+                    <span className="w-6 text-xs tabular-nums text-blush-300">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="flex-1 truncate font-medium">{title}</span>
+                    <SpotifyIcon className="h-4 w-4 shrink-0 text-ink-soft" />
+                    <span className="sr-only">(Spotify)</span>
+                  </a>
+                ) : (
                 <motion.button
                   type="button"
                   onClick={() => onSelectTrack(track)}
@@ -160,7 +178,7 @@ function AlbumCard({
                   <span
                     className={cn(
                       "w-6 text-xs tabular-nums",
-                      isActive ? "text-white/80" : "text-blush-300"
+                      isActive ? "text-white" : "text-blush-300"
                     )}
                   >
                     {String(i + 1).padStart(2, "0")}
@@ -174,6 +192,7 @@ function AlbumCard({
                     </span>
                   )}
                 </motion.button>
+                )}
                 {track.lyricsHe?.trim() && (
                   <Link
                     href={`/lyrics/${encodeURIComponent(track.slug)}`}
