@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/config";
-import { getAdminLyrics } from "@/lib/admin-store";
+import { getAdminLyrics, getDiaryEntries } from "@/lib/admin-store";
 
 export const revalidate = 3600;
 
@@ -26,7 +26,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Lyrics pages for every admin-managed song that has lyrics. A store
   // outage just omits them rather than failing the whole sitemap.
-  const lyrics = await getAdminLyrics().catch(() => []);
+  const [lyrics, diary] = await Promise.all([
+    getAdminLyrics().catch(() => []),
+    getDiaryEntries().catch(() => []),
+  ]);
   const lyricEntries = lyrics
     .filter((l) => l.slug && l.lyricsHe?.trim())
     .map((l) =>
@@ -43,7 +46,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/gallery", { priority: 0.7, changeFrequency: "monthly" }),
     entry("/about", { priority: 0.6, changeFrequency: "monthly" }),
     entry("/contact", { priority: 0.5, changeFrequency: "yearly" }),
-    entry("/diary", { priority: 0.4, changeFrequency: "weekly" }),
+    // The diary is listed only once it has entries (it's empty otherwise).
+    ...(diary.length > 0
+      ? [entry("/diary", { priority: 0.4, changeFrequency: "weekly" })]
+      : []),
     ...lyricEntries,
   ];
 }
